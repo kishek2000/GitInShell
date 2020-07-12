@@ -1,0 +1,112 @@
+#!/bin/dash
+
+branch=`cat ".shrug/branch.txt" | head -1`
+
+if test "$1" = "$branch"; then
+    echo "Already on '$branch'"
+elif ! test -d ".shrug/.$1"; then
+    echo "shrug-checkout: error: unknown branch '$1'"
+else
+    existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt"`
+    for f in $existing_files
+    do
+        cp "$f" ".shrug/.$branch/.files"
+        if test -d ".shrug/.$1/.files" && test -f ".shrug/.$1/.files/$f"; then
+            # copy over index for that file
+            test -f ".shrug/.$branch/.index/$f" && cp ".shrug/.$branch/.index/$f" ".shrug/.$1/.index/$f"
+            if test -f ".shrug/.$branch/$f"; then
+                # echo "dealing with file $f"
+                # copy over file if it has unstaged changes, uncommitted changes.
+                dir_and_index=`diff ".shrug/.$branch/.index/$f" "$f" | wc -l`
+                index_and_repo=`diff ".shrug/.$branch/$f" ".shrug/.$branch/.index" | wc -l`
+                dir_and_repo=`diff ".shrug/.$branch/$f" "$f" | wc -l`
+                # echo "dir and index for $f $dir_and_index, index and repo for $f $index_and_repo, dir and repo for $f $dir_and_repo"
+                # echo "the three values: dir index $dir_and_index, index repo $index_and_repo, dir repo $dir_and_repo"
+                test $dir_and_index -gt 0 && cp "$f" ".shrug/.$1/.files"
+                test $index_and_repo -eq 0 && test $dir_and_repo -gt 0 && cp "$f" ".shrug/.$1/.files"
+                test $index_and_repo -eq 0 && test $dir_and_repo -eq 0 && test $dir_and_index -eq 0 && cp ".shrug/.$1/$f" ".shrug/.$1/.files" && cp ".shrug/.$1/$f" ".shrug/.$1/.index"
+            elif test -f ".shrug/.$branch/.files/$f"; then
+                # copy over file if it is untracked.
+                # test "$branch" = "brancha" && echo "hi, checking file $f"
+                error="false"
+                errorfiles=""
+                # echo "ls .shrug/.brancha/.files"
+                # ls .shrug/.brancha/.files
+                # echo "ls .shrug/.brancha/.index"
+                # ls .shrug/.brancha/.index
+                # echo "ls .shrug/.brancha/"
+                # ls .shrug/.brancha
+                # echo "inside of main, checking for untracked file $f"
+                if test -f ".shrug/.$branch/.files/$f" && ! test -f ".shrug/.$branch/$f" && ! test -f ".shrug/.$branch/.index/$f"; then
+                    if test -f ".shrug/.$1/.files/$f"; then
+                        difference=`diff ".shrug/.$1/.files/$f" ".shrug/.$branch/.files/$f" | wc -l`
+                        test $difference -gt 0 && error="true"
+                        errorfiles="$errorfiles$f "
+                    fi
+                # fi
+                    test "$error" = "true" && # echo "the error files are as follows: '$errorfiles'" &&
+                    echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
+                    for nomerge in $errorfiles
+                    do
+                        echo "$nomerge"
+                    done && exit
+                    test "$error" = "false" && cp "$f" ".shrug/.$1/.files"
+                fi
+            fi
+        else
+            # over here, this means that the file we are checking does not exist in the branch we are changing to, but it does
+            # in the current one. so, if untracked, let's add it to the branch we are changing to.
+
+            # what we need to do though, is check if there is a difference between this version, and the version in the branch
+            # we are going to - if any at all.
+            # test "$branch" = "brancha" && echo "hi, checking file $f"
+            error="false"
+            errorfiles=""
+            # echo "ls .shrug/.brancha/.files"
+            # ls .shrug/.brancha/.files
+            # echo "ls .shrug/.brancha/.index"
+            # ls .shrug/.brancha/.index
+            # echo "ls .shrug/.brancha/"
+            # ls .shrug/.brancha
+            # echo "outside of main, checking for untracked file $f"
+            if test -f ".shrug/.$branch/.files/$f" && ! test -f ".shrug/.$branch/$f" && ! test -f ".shrug/.$branch/.index/$f"; then
+                if test -f ".shrug/.$1/.files/$f"; then
+                    difference=`diff ".shrug/.$1/.files/$f" ".shrug/.$branch/.files/$f" | wc -l`
+                    test $difference -gt 0 && error="true"
+                    errorfiles="$errorfiles$f "
+                fi
+                test "$error" = "true" && # echo "the error files are as follows: '$errorfiles'" &&
+                echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
+                for nomerge in $errorfiles
+                do
+                    echo "$nomerge"
+                done && exit
+                test "$error" = "false" && cp "$f" ".shrug/.$1/.files"
+            # else
+
+            fi
+        fi
+    done
+    if test -d ".shrug/.$1/.files"; then
+        files=`ls ".shrug/.$1/.files" | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt"`
+        empty=`printf "$files\n" | tr '\n' ' ' | wc -l`
+        # echo "nonempty dir in branch $1, $empty"
+        for existing_file in $existing_files
+        do
+            filename=`basename "$existing_file"`
+            if ! test -f ".shrug/.$1/.files/$filename"; then
+                rm "$existing_file"
+            fi
+        done
+        for branch_file in $files
+        do
+            filename=`basename "$branch_file"`
+            # echo "copying the file $branch_file from branch $1 into currdir"
+            cp ".shrug/.$1/.files/$branch_file" "."
+        done
+    fi
+    # echo "$1" > ".shrug/branch.txt"
+    sed -i '1s/.*/'$1/ ".shrug/branch.txt"
+    # cat ".shrug/.$branch/.log/log.txt" > ".shrug/.$1/.log/log.txt"
+    echo "Switched to branch '$1'"
+fi

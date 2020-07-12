@@ -1,0 +1,81 @@
+#!/bin/dash
+
+branch=`cat ".shrug/branch.txt" | head -1`
+index=".shrug/.$branch/.index"
+log=".shrug/.$branch/.log/log.txt"
+force=0
+cached=0
+commits=`wc -l $log | sed 's/ /,/' | cut -d, -f1`
+
+if test $commits -eq 0; then
+    echo "shrug-rm: error: your repository does not have any commits yet"
+    exit
+fi
+
+if test "$1" = "--force"; then
+    force=1
+elif test "$1" = "--cached"; then
+    cached=1
+fi
+
+# echo "force = $force, cached = $cached and args are:"
+files=`echo $@ | sed 's/--cached//' | sed 's/--force//'`
+
+for f in $files
+do
+    ! test -f "$index/$f" && echo "shrug-rm: error: '$f' is not in the shrug repository" && exit
+done
+
+if test $force -eq 1; then
+    for f in $files
+    do
+        if ! test -f ".shrug/.$branch/.index/$f"; then
+            echo "shrug-rm: error: '$f' is not in the shrug repository"
+            exit
+        else
+            if test "$2" = "--cached"; then
+                rm ".shrug/.$branch/.index/$f"
+            else
+                rm ".shrug/.$branch/.index/$f"
+                rm $f
+            fi
+        fi
+    done
+else
+    for file in $files
+    do
+        if ! test -f ".shrug/.$branch/$file"; then
+            if ! test -f "$index/$file"; then
+                echo "shrug-rm: error: '$file' is not in the shrug repository"
+                exit
+            else
+                ! test $cached -eq 1 && echo "shrug-rm: error: '$file' has changes staged in the index"
+                test $cached -eq 1 && rm "$index/$file" && echo "$file - unstaged" >> ".shrug/.$branch/.log/bin.txt"
+            fi
+        else
+            compare_repo_dir=`diff ".shrug/.$branch/$file" "$file" | wc -l`
+            compare_repo_index=`diff "$index/$filename" ".shrug/.$branch/$file" | wc -l`
+            compare_index_dir=`diff "$index/$filename" "$file" | wc -l`
+
+            if test $compare_repo_index -gt 0 && test $compare_index_dir -gt 0; then
+                echo "shrug-rm: error: '$file' in index is different to both working file and repository"
+            elif test $cached -eq 1; then
+                rm "$index/$file"
+                echo "$file - unstaged" >> ".shrug/.$branch/.log/bin.txt"
+            elif test $compare_repo_dir -eq 0; then
+                test -f "$index/$file" && rm "$index/$file"
+                rm "$file"
+                echo "$file - deleted" >> ".shrug/.$branch/.log/bin.txt"
+            else
+                test $compare_repo_index -eq 0 &&
+                test $compare_index_dir -gt 0 &&
+                echo "shrug-rm: error: '$file' in repository is different to working file"
+
+                test $compare_repo_index -gt 0 &&
+                test $compare_index_dir -eq 0 &&
+                echo "shrug-rm: error: '$file' has changes staged in the index"
+            fi
+        fi
+
+    done
+fi

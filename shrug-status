@@ -1,0 +1,77 @@
+#!/bin/dash
+
+branch=`cat ".shrug/branch.txt" | head -1`
+index=".shrug/.$branch/.index"
+log=".shrug/.$branch/.log/log.txt"
+repo=".shrug/.$branch/*"
+
+commits=`wc -l $log | sed 's/ /,/' | cut -d, -f1`
+
+if test $commits -eq 0; then
+    echo "shrug-status: error: your repository does not have any commits yet"
+    exit
+fi
+
+printf "" > ".shrug/.$branch/.log/status.txt"
+
+for file in $repo
+do
+    deletedfile=`echo $file | sed 's/.shrug\/.*\///'`
+    test "$deletedfile" = "*" && continue;
+    if ! test -f "$deletedfile"; then
+        inbin=`cat ".shrug/.$branch/.log/bin.txt" | egrep "$deletedfile - .*deleted" | wc -l`
+        test $inbin -eq 0 && echo "$deletedfile - file deleted" >> ".shrug/.$branch/.log/bin.txt"
+    fi
+done
+
+for file in "$index/*"
+do
+    deletedfile=`echo $file | sed 's/.shrug\/.*\///'`
+    test "$deletedfile" = "*" && continue;
+    if ! test -f "$deletedfile"; then
+        inbin=`cat ".shrug/.$branch/.log/bin.txt" | egrep "$deletedfile - .*deleted" | wc -l`
+        test $inbin -eq 0 && echo "$deletedfile - added to index, file deleted" >> ".shrug/.$branch/.log/bin.txt"
+    fi
+done
+
+for file in *
+do
+    filename=`echo $file`
+    test "$filename" = "*" && continue;
+    if test -f "$index/$filename"; then # this is where a file is added
+        compare_dir=`diff "$index/$filename" "$file" | wc -l`
+        if test -f ".shrug/.$branch/$filename"; then # this is where a file is committed
+            compare_repo=`diff ".shrug/.$branch/$filename" "$index/$filename" | wc -l`
+            test $compare_repo -eq 0 &&
+            ! test $compare_dir -gt 0 &&
+            echo "$filename - same as repo" >> ".shrug/.$branch/.log/status.txt"
+
+            test $compare_repo -gt 0 &&
+            test $compare_dir -gt 0 &&
+            echo "$filename - file changed, different changes staged for commit" >> ".shrug/.$branch/.log/status.txt"
+
+            test $compare_repo -gt 0 &&
+            test $compare_dir -eq 0 &&
+            echo "$filename - file changed, changes staged for commit" >> ".shrug/.$branch/.log/status.txt"
+
+            test $compare_repo -eq 0 &&
+            test $compare_dir -gt 0 &&
+            echo "$filename - file changed, changes not staged for commit" >> ".shrug/.$branch/.log/status.txt"
+            
+        else
+            test $compare_dir -eq 0 &&
+            echo "$filename - added to index" >> ".shrug/.$branch/.log/status.txt"
+            
+            test $compare_dir -gt 0 &&
+            echo "$filename - added to index, file changed" >> ".shrug/.$branch/.log/status.txt"
+        fi
+
+    elif ! test "$filename" = "*"; then
+        echo "$filename - untracked" >> ".shrug/.$branch/.log/status.txt"
+    fi
+done
+
+cat ".shrug/.$branch/.log/bin.txt" | egrep -v "unstaged" | egrep -v "\*" >> ".shrug/.$branch/.log/status.txt"
+cat ".shrug/.$branch/.log/status.txt" | sort
+
+

@@ -1,0 +1,158 @@
+Cases for merges
+Master      Branch      Latest common commit
+0           1           1
+1           2           2
+2           3           3
+3           5           4
+4           6           5
+5           7           6
+6                       7
+7                       
+8  
+
+
+diff L M
+0a1
+7a9
+
+diff L B
+4d3
+
+order of operations, to latest original, to reach merged result: 
+delete, change, add
+ie
+4d3
+0a1
+7a9
+
+
+[Merge into:
+    0
+    1
+    2
+    3
+    5
+    6
+    7
+    8
+]
+---
+
+Master      Branch      Latest common commit
+1           0           1
+2           1           2
+3           2           3
+5           3           4
+6           4           5
+7           5           6
+            6           7
+            7           
+            8          
+
+above works: 4d3, 0a1, 7a9 to original
+
+[Merge into:
+    0
+    1
+    2
+    3
+    5
+    6
+    7
+    8
+]
+---
+
+Master      Branch      Latest common commit
+1           0           1
+2           1           2
+3           2           3
+5           3           4
+6           4           5
+7           5           6
+            7           7           
+            8          
+
+update: start with the deletions that are lowest in the file, and work your way up.
+6d6, 4d3
+then, replacements in any order:
+(none)
+then, additions in lowest file location order too:
+7a8, 0a1
+
+[Merge into:
+    0
+    1
+    2
+    3
+    5
+    7
+    8
+]
+---
+
+Master      Branch      Latest common commit
+1           1           1
+2           22          2
+3           3           3
+44          4           4
+5           5           5
+6           6           6
+7           7           7          
+
+[Merge into:
+    1
+    22
+    3
+    44
+    5
+    6
+    7
+]
+
+---
+
+Master      Branch      Latest common commit
+1           1           1
+2           2           2
+3           3           3
+44          4           4
+5           5           5
+6           6           6
+7           7           7          
+[Already up to date]
+---
+
+Master      Branch      Latest common commit
+1           1           1
+2           2           2
+3           3           3
+4           44          4
+5           5           5
+6           6           6
+7           7           7          
+[FAST FORWARD - no commit]
+---
+
+Master      Branch      Latest common commit
+11          21          1
+2           2           2
+3           3           3
+4           4           4
+5           5           5
+6           6           6
+7           7           7          
+[CONFLICT]
+---
+
+Master      Branch      Latest common commit
+11          11          1
+2           2           2
+3           3           3
+4           4           4
+5           5           5
+6           6           6
+7           7           7          
+[accept either change, commit it. not auto merge, just a commit]
+---
+

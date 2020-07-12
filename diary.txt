@@ -1,0 +1,37 @@
+DATE		Start		End		    Activity		                Comments
+
+27/06/2020	5:55pm		6:10pm		coding			                Just getting shrug-init working, excited to get started on this!
+""/""/""""  9:00pm      9:45pm      coding		    	            Continued work on subset 0. Init, add, commit and log working. 
+                                                                    Show is todo.
+28/06/2020  12:00pm  	12:38pm		coding	    		            Finished off subset 0!!
+""/""/""""	1:30pm		3:00pm		debugging/testing	            Finally succeeded with the basic autotests for subset 0 and understood 
+                                                                    some parallels with git through use of reference implementation.
+29/06/2020	11:30am		12:10pm		coding and testing	            Succeeded in simple passes for shrug-commit with the -a option in subset 
+                                                                    1, and succeeded in some simple manual tests of shrug-status. next up 
+                                                                    - shrug-rm!
+30/06/2020  1:30pm      4:13pm      coding, testing, debugging      Worked through all of subset 1 and passed all but the final autotest. 
+                                                                    Strange bug happening, will investigate further soon.
+""/""/""""  6:30pm      8:20pm      debugging                       Ahhhhh subset1_18 this autotest had me very annoyed hahaha. 
+                                                                    It actually unveiled a lot of logical flaws - all fixed, onto 
+                                                                    subset 2 from tomorrow!
+2/07/2020   4:00pm      4:40pm      coding, investigating           Had a day break and now started on subset 2 - realised that the way I 
+                                                                    want to implement branches needed me to cascade changes all over the 
+                                                                    previous parts - so I did this, made basic starts to branch and will 
+                                                                    continue some point soon.
+3/07/2020   5:00pm      5:53pm      coding                          Did some more work on shrug branch and checkout, some good 
+                                                                    foundations laid. Will continue soon.
+5/07/2020   3:00pm      6:21pm      coding, testing, debugging      Passed all the tests for branch and checkout! Started to experiment with 
+                                                                    merge in reference implementation - will come back and continue with a 
+                                                                    fresh look/start.
+11/07/2020  3:30pm      5:30pm      coding, testing, debugging      Took a looong break, but I'm back!! Finally passed some tests for git 
+                                                                    merge! Been a while, decided to really buckle up and give it a go.
+""/""/""""  8:00pm      1:22am      coding, testing, debugging      Continuing to try and work through git merge. It's been an interesting 
+                                                                    ride - currently trying to better understand how to compute the 
+                                                                    differences, and where. Hopefully solve it all tomorrow, and start 
+                                                                    writing my own tests!
+12/07/2020  11:00am     3:30pm      coding, testing, debugging      Finaaaaalllllllyyyyyyyyy passed all basic autotests. Took a while to 
+                                                                    understand what algorithm i wantedto implement in merge - i saved my 
+                                                                    working in a file called "merge cases". now to write tests for the 
+                                                                    rest of the time :D I have a good number of ideas for tests - especially 
+                                                                    in merge, where I haven't even finished implementing the algorithm I want 
+                                                                    to do.

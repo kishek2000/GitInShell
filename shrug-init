@@ -1,0 +1,17 @@
+#!/bin/dash
+
+if test -d ".shrug"; then
+    echo "shrug-init: error: .shrug already exists"
+else
+    mkdir ".shrug"
+    mkdir ".shrug/.master"
+    mkdir ".shrug/.master/.index"
+    mkdir ".shrug/.master/.log"
+    touch ".shrug/branch.txt"
+    echo "master" > ".shrug/branch.txt"
+    echo 0 >> ".shrug/branch.txt"
+    touch ".shrug/.master/.log/log.txt"
+    touch ".shrug/.master/.log/bin.txt"
+    touch ".shrug/.master/.log/status.txt"
+    echo "Initialized empty shrug repository in .shrug"
+fi

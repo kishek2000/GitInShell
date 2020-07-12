@@ -1,0 +1,22 @@
+#!/bin/dash
+
+repo=".shrug"
+
+for var in "$@"
+do
+    if test -f "$var"; then
+        if test -d ".shrug/"; then
+            branch=`cat ".shrug/branch.txt" | head -1`
+            cp "$var" ".shrug/.$branch/.index/"
+        else
+            echo "shrug-add: error: no .shrug directory containing shrug repository exists"
+        fi
+    else
+        branch=`cat ".shrug/branch.txt" | head -1`
+        if test -f "$repo/.$branch/$var"; then
+            echo "$var - deleted" > ".shrug/.$branch/.log/bin.txt" && rm "$repo/.$branch/$var"
+        else
+            echo "shrug-add: error: can not open '$var'"
+        fi
+    fi
+done

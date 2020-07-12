@@ -1,0 +1,32 @@
+#!/bin/dash
+
+branch=`cat ".shrug/branch.txt" | head -1`
+logfiles=".shrug/.$branch/.log"
+indexfiles=".shrug/.$branch/.index"
+filename=`echo $1 | sed 's/:/ /' | cut -d' ' -f2`
+ncommit=`echo $1 | sed 's/:/ /' | cut -d' ' -f1`
+
+# echo $filename
+if test "$ncommit" = "" && test -f "$indexfiles/$filename";
+then
+    cat "$indexfiles/$filename"
+elif test -f "$logfiles/$ncommit-$filename";
+then
+    cat "$logfiles/$ncommit-$filename"
+else
+    if ! test "$ncommit" = ""; then
+        count=`ls "$logfiles/" | egrep "$ncommit-*" | wc -l | sed 's/ /,/' | cut -d, -f1`
+        if test $count -eq 0; then
+            echo "shrug-show: error: unknown commit '$ncommit'"
+        else
+            echo "shrug-show: error: '$filename' not found in commit $ncommit"
+        fi
+    else
+        if ! test -f "$indexfiles/$filename"; then
+            echo "shrug-show: error: '$filename' not found in index"
+        else
+            cat "$indexfiles/$filename"
+        fi
+    fi
+fi
+

@@ -1,0 +1,47 @@
+#!/bin/dash
+
+branch=`cat ".shrug/branch.txt" | head -1`
+commits=`cat ".shrug/branch.txt" | tail -1`
+
+if test $commits -eq 0; then
+    echo "shrug-branch: error: your repository does not have any commits yet"
+    exit
+fi
+
+if test "$1" = "-d"; then
+    test "$2" = "master" && echo "shrug-branch: error: can not delete branch '$2'" && exit
+    test "$2" = "$branch" && echo "shrug-branch: error: you are currently in this branch. Move to another to delete it." && exit
+    ! test -d ".shrug/.$2" && echo "shrug-branch: error: branch '$2' does not exist" && exit
+
+    for file in .shrug/.$2/.files/*
+    do
+        filename=`basename $file`
+        if test -f "$filename"; then
+            difference=`diff "$filename" "$file" | wc -l`
+            test $difference -gt 0 && echo "shrug-branch: error: branch '$2' has unmerged changes" && exit
+        else
+            # echo "$filename not here" && ls
+            echo "shrug-branch: error: branch '$2' has unmerged changes" && exit
+        fi
+    done
+
+    test -d ".shrug/.$2" && rm -r ".shrug/.$2" && echo "Deleted branch '$2'"
+elif test "$#" = "1"; then
+    test -d ".shrug/.$1" && echo "shrug-branch: error: branch '$1' already exists" && exit
+    existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt"`
+    ! test -d ".shrug/.$branch/.files" && mkdir ".shrug/.$branch/.files"
+    for f in $existing_files
+    do
+        cp "$f" ".shrug/.$branch/.files"
+    done
+    cp -r ".shrug/.$branch" ".shrug/.$1"
+    # printf "" > ".shrug/.$1/.log/log.txt"
+    printf "" > ".shrug/.$1/.log/bin.txt"
+    printf "" > ".shrug/.$1/.log/status.txt"
+else
+    directories=`ls -d .shrug/.* | tr " " "\n" | egrep -v "\.$" | egrep -v "\.\.$" | sed 's/.shrug\///'`
+    for dir in $directories
+    do
+        echo "$dir" | sed 's/\.//'
+    done
+fi

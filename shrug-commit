@@ -1,0 +1,108 @@
+#!/bin/dash
+
+if test $# -lt 2;
+then
+    echo "shrug-commit: Usage: shrug-commit [-a] -m commit-message"
+    exit
+fi
+
+branch=`cat ".shrug/branch.txt" | head -1`
+# cat ".shrug/branch.txt"
+FILES=".shrug/.$branch/.index/*"
+log=".shrug/.$branch/.log/log.txt"
+# cat $log
+logcommits=".shrug/.$branch/.log/*"
+message="$2"
+
+if test $1 = "-a" && test $2 = "-m";
+then
+    message=$3
+    for FILE in *
+    do
+        filename=`echo $FILE | sed 's/.shrug\/..\///'`
+        test "$filename" = "*" && continue;
+        if test -f ".shrug/.$branch/.index/$filename";
+        then
+            # echo "proceeding to move $FILE into .shrug/.$branch/.index/$filename"
+            cp "$FILE" ".shrug/.$branch/.index/$filename"
+        fi
+    done
+fi
+
+if test $1 = "-m" || test $2 = "-m";
+then
+    # echo $2
+    # ncommit=`wc -l $log | sed 's/ /,/' | cut -d, -f1`
+    ncommit=`cat ".shrug/branch.txt" | tail -1`
+    # echo "ncommit $ncommit"
+    # echo commits=$ncommit
+    # if test $ncommit -gt 0; then
+    #     ncommit=`cat ".shrug/.$branch/.log/log.txt" | cut -d ' ' -f1 | tail -1`
+    #     ncommit=$(($ncommit + 1))
+    # fi
+    # echo "ncommit $ncommit"
+    # echo commits=$ncommit
+    committed=0
+    changes=0
+    for FILE in $FILES
+    do
+        latestfilecommit="-"
+        latestallcommit="-"
+        filename=`echo $FILE | sed 's/.shrug\/.*\/.index\///'`
+        test "$filename" = "*" && continue;
+        filecommits=`ls -l $logcommits | egrep "[0-9]*-$filename" | wc -l`
+
+        if test "$filecommits" -gt 0; then
+            latestfilecommit=`ls $logcommits | egrep "[0-9]*-$filename" | sed 's/.shrug\/.*\/.log\///' | cut -d '-' -f1 | sort -r | head -1`
+            latestallcommit=`ls $logcommits | egrep "[0-9]*-.*" | sed 's/.shrug\/.*\/.log\///' | cut -d '-' -f1 | sort -r | head -1`
+            # echo $latestfilecommit yo
+            # echo $latestallcommit
+            if test "$latestfilecommit" = "$latestallcommit"; then
+                difference=`diff "$FILE" ".shrug/.$branch/.log/$latestfilecommit-$filename" | wc -l`
+                changes=$(($changes + $difference))
+            else
+                changes=1
+            fi
+        else
+            changes=1
+        fi
+    done
+    # echo $changes
+    file_deletion_commits=`cat ".shrug/.$branch/.log/bin.txt" | wc -l`
+    deletion_commits=0
+    deleted_files=`cat ".shrug/.$branch/.log/bin.txt" | cut -d ' ' -f1`
+
+    for REPOFILE in "$deleted_files"
+    do
+        if test -f ".shrug/.$branch/$REPOFILE"; then
+            rm ".shrug/.$branch/$REPOFILE"
+            deletion_commits=$(($deletion_commits + 1))
+        fi
+    done
+    # echo $changes, $deletion_commits, $file_deletion_commits
+    changes=$(($file_deletion_commits + $changes + $deletion_commits))
+    # echo "ncommit $ncommit"
+
+    if test "$changes" -gt 0; then
+        for FILE in $FILES
+        do
+            filename=`echo $FILE | sed 's/.shrug\/.*\/.index\///'`
+            test "$filename" = "*" && touch ".shrug/.$branch/.log/$ncommit-" && continue;
+            cp "$FILE" ".shrug/.$branch/.log"
+            cp "$FILE" ".shrug/.$branch/"
+            touch ".shrug/.$branch/.log/$ncommit-$filename"
+            mv ".shrug/.$branch/.log/$filename" ".shrug/.$branch/.log/$ncommit-$filename"
+        done
+        echo "Committed as commit $ncommit"
+        echo "$ncommit $message" >> "$log"
+        ncommit=$(($ncommit + 1))
+        # test $ncommit -eq 0 && echo "$ncommit $message" > "$log"
+        sed -i '2s/.*/'$ncommit/ ".shrug/branch.txt"
+        # echo "ncommit $ncommit"
+        # cat ".shrug/branch.txt"
+        printf "" > ".shrug/.$branch/.log/bin.txt"
+    else
+        test $committed -eq 0 && echo "nothing to commit"
+    fi
+fi
+

@@ -1,4 +1,9 @@
 #!/bin/dash
 
+if ! test -d ".shrug"; then
+    >&2 echo "shrug-log: error: no .shrug directory containing shrug repository exists"
+    exit
+fi
+
 branch=`cat ".shrug/branch.txt" | head -1`
 cat ".shrug/.$branch/.log/log.txt" | sort -r | egrep -v "^$" | uniq

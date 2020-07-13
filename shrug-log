@@ -7,3 +7,4 @@ fi
 
 branch=`cat ".shrug/branch.txt" | head -1`
 cat ".shrug/.$branch/.log/log.txt" | sort -r | egrep -v "^$" | uniq
+

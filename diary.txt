@@ -39,3 +39,14 @@ DATE		Start		End		    Activity		                Comments
                                                                     of work :(. To you who is reading this, please let me know if I require
                                                                     to prove anything about whether this is my own work :D. Also, thanks for
                                                                     making it up to here XD.
+13/07/2020  12:30pm     4:56pm      coding, testing, debugging      As in my pushed git message, i did some further testing and finally 
+                                    and writing tests.              started to write some tests. Today, i wanted to complete my idea about
+                                                                    the merge where i needed to check if i actually account for consecutive
+                                                                    line changes (eg 1,2c4) outputs from diff. Turns out sed already did 
+                                                                    most of the work for replacements and deletions, but additions needed 
+                                                                    some further tweaking. Took a while to find the best combo, will test more 
+                                                                    tomorrow. After this, started my test writing. Should hopefully finish
+                                                                    a good number of tests by tomorrow!
+""/""/""""  5:30pm      6:00pm      pushing version to git,         Just setup some more tests in subset 1 functions, currently just some
+                                    writing more tests              simple error checks - already found things to fix and edit! Lovely. 
+                                                                    Committed it up, will continue tomorrow now.

@@ -28,14 +28,17 @@ if test "$1" = "-d"; then
     test -d ".shrug/.$2" && rm -r ".shrug/.$2" && echo "Deleted branch '$2'"
 elif test "$#" = "1"; then
     test -d ".shrug/.$1" && echo "shrug-branch: error: branch '$1' already exists" && exit
+
     existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt"`
     ! test -d ".shrug/.$branch/.files" && mkdir ".shrug/.$branch/.files"
     for f in $existing_files
     do
         cp "$f" ".shrug/.$branch/.files"
     done
+    
     cp -r ".shrug/.$branch" ".shrug/.$1"
     # printf "" > ".shrug/.$1/.log/log.txt"
+    test -f ".shrug/.$1/.merged/*.*" && rm ".shrug/.$1/.merged/*.*"
     printf "" > ".shrug/.$1/.log/bin.txt"
     printf "" > ".shrug/.$1/.log/status.txt"
 else

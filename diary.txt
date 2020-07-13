@@ -34,4 +34,8 @@ DATE		Start		End		    Activity		                Comments
                                                                     working in a file called "merge cases". now to write tests for the 
                                                                     rest of the time :D I have a good number of ideas for tests - especially 
                                                                     in merge, where I haven't even finished implementing the algorithm I want 
-                                                                    to do.
+                                                                    to do. 
+""/""/""""  8:00pm         -        pushing version onto git        Only now, have I realised I was required to submit intermediate versions
+                                                                    of work :(. To you who is reading this, please let me know if I require
+                                                                    to prove anything about whether this is my own work :D. Also, thanks for
+                                                                    making it up to here XD.

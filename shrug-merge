@@ -64,7 +64,21 @@ else
                 # echo "file that represents their latest common commit"
                 # cat "$latest_common_commit"
 
-                # echo "diff output for diff between latest common commit and mergin branch:"
+                ## let's quickly check that the branch we are trying to merge, hasn't been merged in already.
+                merged=0
+                for branch_files in .shrug/.$1/.files/*
+                do
+                    if test -f ".shrug/.$branch/.merged/$filename"; then
+                        branch_and_merged=`diff ".shrug/.$branch/.merged/$filename" ".shrug/.$1/.log/$latest_branch_version-$filename" | wc -l`
+                        test $branch_and_merged -eq 0 && merged=$(($merged + 1))
+                    else
+                        merged=0
+                        break
+                    fi
+                done
+                test $merged -gt 0 && echo "Already up to date" && exit
+                
+                # echo "diff output for diff between latest common commit and merging branch:"
                 # diff "$latest_common_commit" ".shrug/.$1/.log/$latest_branch_version-$filename"
 
                 # echo "diff output for diff between latest common commit and current branch:"
@@ -149,14 +163,14 @@ else
             else
                 copyall="true"
             fi
-        else 
-            cp "$file" ./
-            cp "$file" ".shrug/.$branch/.files/"
-            logs=`ls ".shrug/.$1/.log" | egrep "$filename"`
-            for logfile in $logs
-            do
-                cp ".shrug/.$1/.log/$logfile" ".shrug/.$branch/.log"
-            done
+        # else 
+            # cp "$file" ./
+            # cp "$file" ".shrug/.$branch/.files/"
+            # logs=`ls ".shrug/.$1/.log" | egrep "$filename"`
+            # for logfile in $logs
+            # do
+            #     cp ".shrug/.$1/.log/$logfile" ".shrug/.$branch/.log"
+            # done
         fi
     done
 
@@ -168,19 +182,52 @@ else
         echo "$nomerge"
     done
 
-    test "$error" = "false" && test "$copyall" = "true" && echo "Fast-forward: no commit created" &&
-    cat ".shrug/.$1/.log/log.txt" >> ".shrug/.$branch/.log/log.txt" &&
-    for file in .shrug/.$1/.files/*
-    do  
-        filename=`basename $file`
-        test "$filename" = "*" && continue
-        if ! test -f "$filename"; then
-            cp "$file" ./
-            cp "$file" ".shrug/.$branch/"
-            cp "$file" ".shrug/.$branch/.index/"
-            cp "$file" ".shrug/.$branch/.files/"
-        fi
-    done
+    if test "$error" = "false" && test "$copyall" = "true"; then
+        ## to check if we fast forward, or are already up to date, we diff the currdir file 
+        ## with the branch file
+        fast_forward="false"
+        for file in .shrug/.$1/.files/*
+        do  
+            filename=`basename $file`
+            ## if the file doesnt exist already, then straight away we need to do a fast foward:
+            test "$filename" = "*" && continue
+            if ! test -f "$filename"; then
+                fast_forward="true"
+            fi
+
+            difference=0
+            test -f "$filename" && difference=`diff "$filename" "$file" | wc -l`
+            test $difference -gt 0 && fast_forward="true"
+            if test $fast_forward="true"; then
+                index_and_curr=0
+                index_and_repo=0
+                
+                test -f ".shrug/.$branch/.index/$filename" &&
+                index_and_curr=`diff "$filename" ".shrug/.$branch/.index/$filename" | wc -l`
+                
+                test -f ".shrug/.$branch/$filename" && test -f ".shrug/.$branch/$filename" &&
+                index_and_repo=`diff "$filename" ".shrug/.$branch/$filename" | wc -l`
+
+                if test $index_and_curr -gt 0 || test $index_and_repo -gt 0; then
+                    echo "shrug-merge: error: can not merge: local changes to files"
+                else
+                    cp "$file" ./
+                    cp "$file" ".shrug/.$branch/"
+                    cp "$file" ".shrug/.$branch/.index/"
+                    cp "$file" ".shrug/.$branch/.files/"
+                    logs=`ls ".shrug/.$1/.log" | egrep "$filename"`
+                    for logfile in $logs
+                    do
+                        cp ".shrug/.$1/.log/$logfile" ".shrug/.$branch/.log"
+                    done
+                fi
+            fi
+        done
+        # echo "fast_forward: $fast_forward, difference: $difference"
+        test "$fast_forward" = "false" && echo "Already up to date"
+        test "$fast_forward" = "true" && echo "Fast-forward: no commit created" &&
+        cat ".shrug/.$1/.log/log.txt" >> ".shrug/.$branch/.log/log.txt"
+    fi
 
     committed=0
     test "$error" = "false" && test "$copyall" = "false" &&
@@ -224,6 +271,24 @@ else
             ##############
             ## Strategy ##
             ##############
+            
+            ## Firstly before we get started in merging stuff, let's check if we are already up to date.
+            curr_and_branch=`diff "$filename" ".shrug/.$1/.log/$latest_branch_version-$filename" | wc -l`            
+            test $curr_and_branch -eq 0 && echo "Already up to date" && exit
+
+            ## Secondly, let's make sure that we don't have any local changes:
+            index_and_curr=0
+            index_and_repo=0
+            
+            test -f ".shrug/.$branch/.index/$filename" &&
+            index_and_curr=`diff "$filename" ".shrug/.$branch/.index/$filename" | wc -l`
+            
+            test -f ".shrug/.$branch/$filename" && test -f ".shrug/.$branch/$filename" &&
+            index_and_repo=`diff "$filename" ".shrug/.$branch/$filename" | wc -l`
+
+            if test $index_and_curr -gt 0 || test $index_and_repo -gt 0; then
+                echo "shrug-merge: error: can not merge: local changes to files"
+            fi
 
             ## To do the merging, we want to compare our file from the branch getting merged into our current branch, and the file
             ## of our current branch, with their latest common commit.
@@ -238,12 +303,16 @@ else
             curr_additions=`echo "$curr_and_first" | egrep 'a' | sed 's/[0-9]$/\0-current/g'`
             
             if test "$branch_deletions" = "" && test "$branch_replacements" = "" && test "$branch_additions" = "" && 
-            test "$branch_deletions" = "" && test "$branch_replacements" = "" && test "$branch_additions" = ""; then
+            test "$curr_deletions" = "" && test "$curr_replacements" = "" && test "$curr_additions" = ""; then
                 cp "$file" ./
                 cp "$file" ".shrug/.$branch/"
                 cp "$file" ".shrug/.$branch/.index/"
                 cp "$file" ".shrug/.$branch/.files/"
-                continue
+                logs=`ls ".shrug/.$1/.log" | egrep "$filename"`
+                for logfile in $logs
+                do
+                    cp ".shrug/.$1/.log/$logfile" ".shrug/.$branch/.log"
+                done
             fi
 
             echo "Auto-merging $filename"
@@ -261,25 +330,25 @@ else
             cat $latest_common_commit > $filename
             for deletion in $deletions
             do
-                src=`echo $deletion | cut -d 'd' -f1`
-                dest=`echo $deletion | cut -d 'd' -f2`
+                src=`echo $deletion | cut -d 'd' -f1 | tr ',' '\n' | sort -r | tr '\n' ',' | sed 's/,$//'`
+                dest=`echo $deletion | cut -d 'd' -f2 | tr ',' '\n' | sort -r | tr '\n' ',' | sed 's/,$//'`
                 sed -i "${src}d" $filename
             done
 
-            ## from these diffs, we now look through the replacements and do them next - any order is fine.
+            # ## from these diffs, we now look through the replacements and do them next - any order is fine.
             
             for changes in $branch_replacements
             do
-                src=`echo $changes | cut -d 'c' -f1`
-                dest=`echo $changes | cut -d 'c' -f2`
+                src=`echo $changes | cut -d 'c' -f1 | tr ',' '\n' | sort -r | tr '\n' ',' | sed 's/,$//'`
+                dest=`echo $changes | cut -d 'c' -f2 | tr ',' '\n' | sort -r | tr '\n' ',' | sed 's/,$//'`
                 destline=`sed -n "$dest"p ".shrug/.$1/.log/$latest_branch_version-$filename"`
                 sed -i $src's/.*/'$destline/ $filename
             done
             
             for changes in $curr_replacements
             do
-                src=`echo $changes | cut -d 'c' -f1`
-                dest=`echo $changes | cut -d 'c' -f2`
+                src=`echo $changes | cut -d 'c' -f1 | tr ',' '\n' | sort -r | tr '\n' ',' | sed 's/,$//'`
+                dest=`echo $changes | cut -d 'c' -f2 | tr ',' '\n' | sort -r | tr '\n' ',' | sed 's/,$//'`
                 destline=`sed -n "$dest"p ".shrug/.$branch/.log/$latest_current_version-$filename"`
                 sed -i $src's/.*/'$destline/ $filename
             done
@@ -300,6 +369,7 @@ else
             do
                 # test "$filename" = "d" && echo $addition
                 # cat $filename
+                # echo "addition needed: $addition"
                 total=`cat $filename | wc -l`
                 src=`echo $addition | cut -d 'a' -f1`
                 dest=`echo $addition | cut -d 'a' -f2`
@@ -307,14 +377,41 @@ else
                 
                 is_branch=`echo $addition | egrep 'branch' | wc -l`
                 is_curr=`echo $addition | egrep 'current' | wc -l`
-                # echo "isbranch $is_branch iscurr $is_curr, src $src, dest $dest, total $total"
+                # echo "isbranch $is_branch -- iscurr $is_curr -- src $src -- dest $dest -- total $total"
                 test "$is_branch" = "1" && destline=`sed -n "$dest"p ".shrug/.$1/.log/$latest_branch_version-$filename"`
                 test "$is_curr" = "1" && destline=`sed -n "$dest"p ".shrug/.$branch/.log/$latest_current_version-$filename"`
-                test $dest -le $total && test $src -eq 0 && sed -i "$dest i\\$destline" $filename
-                test $dest -le $total && test $src -gt 0 && sed -n -i 'p;'"$dest"a\ "$destline" $filename
-                test $dest -gt $total && echo $destline >> $filename
+                # echo sed -n "$dest"p ".shrug/.$branch/.log/$latest_current_version-$filename"
+                dest=`echo $dest | tr ',' ' '`
+                # echo here
+                for line_num in $src
+                do
+                    lines_in_addition=`echo "$destline" | wc -l`
+                    if test $lines_in_addition -eq 1; then
+                        test $line_num -le $total && test $line_num -eq 0 && sed -i '1i'\\"$destline" $filename
+                        test $line_num -le $total && test $line_num -gt 0 && sed -n -i 'p;'"$line_num"a\ "$destline" $filename
+                        test $line_num -gt $total && echo $destline >> $filename
+                    else
+                        for line in $destline
+                        do
+                            test $line_num -le $total && test $line_num -eq 0 && sed -i '1i'\\"$line" $filename
+                            test $line_num -le $total && test $line_num -gt 0 && sed -n -i 'p;'"$line_num"a\ "$line" $filename
+                            test $line_num -gt $total && echo $destline >> $filename
+                        done
+                    fi
+                done
             done
             committed=$(( $committed + 1 ))
+            cp "$file" ".shrug/.$branch/.merged"
+        else 
+            cp "$file" ./
+            cp "$file" ".shrug/.$branch/"
+            cp "$file" ".shrug/.$branch/.index/"
+            cp "$file" ".shrug/.$branch/.files/"
+            logs=`ls ".shrug/.$1/.log" | egrep "$filename"`
+            for logfile in $logs
+            do
+                cp ".shrug/.$1/.log/$logfile" ".shrug/.$branch/.log"
+            done
         fi
     done
     test $committed -gt 0 && shrug-commit -a -m $3 && cat ".shrug/.$1/.log/log.txt" >> ".shrug/.$branch/.log/log.txt"

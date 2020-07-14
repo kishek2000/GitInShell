@@ -7,7 +7,8 @@
 ## scripts.
 
 ## My thought process in doing each of these files was to test things
-## that aren't already tested by the given basic autotests.s
+## that aren't already tested by the given basic autotests, besides some
+## stuff that felt naturally necessary to test anyway.
 
 ## I will be using the ref implementation as my source of confirmation
 ## for passing or failing a test.
@@ -17,7 +18,11 @@ PASS='\033[0;32m'
 FAIL='\033[0;31m'
 NC='\033[0m'
 
-echo "Testing shrug-add..."
+echo
+echo "============================================="
+echo "============ Testing shrug-add... ==========="
+echo "============================================="
+echo
 
 ##
 ## Test 01 - no shrug repo present
@@ -36,17 +41,17 @@ rm -rf .shrug
 count=1
 while test $count -le 2
 do
-    echo .
+    printf "."
     passed=`diff "add_t1_$count" "add_t1_$count"a | wc -l`
     if test $passed -gt 0; then
-        printf "${FAIL}==> Test 1 (no repo) --- failed${NC}\n"
+        printf "${FAIL}Test 1 (no repo) --- failed${NC}\n"
         echo "difference below:"
         diff "add_t1_$count" "add_t1_$count"a
         exit
     fi
     count=$(($count + 1))
 done
-printf "${PASS}==> Test 1 (no repo) --- passed!${NC}\n"
+printf " ${PASS}Test 1 (no repo) --- passed!${NC}\n"
 rm add_t1*
 
 ##
@@ -68,17 +73,17 @@ rm -rf .shrug
 count=1
 while test $count -le 2
 do
-    echo .
+    printf "."
     passed=`diff "add_t2_$count" "add_t2_$count"a | wc -l`
     if test $passed -gt 0; then
-        printf "${FAIL}==> Test 2 (nonexistent files) --- failed${NC}\n"
+        printf "${FAIL}Test 2 (nonexistent files) --- failed${NC}\n"
         echo "difference below:"
         diff "add_t2_$count" "add_t2_$count"a
         exit
     fi
     count=$(($count + 1))
 done
-printf "${PASS}==> Test 2 (nonexistent files) --- passed!${NC}\n"
+printf " ${PASS}Test 2 (nonexistent files) --- passed!${NC}\n"
 rm add_t2*
 
 ##
@@ -100,15 +105,17 @@ rm -rf .shrug
 count=1
 while test $count -le 2
 do
-    echo .
+    printf "."
     passed=`diff "add_t3_$count" "add_t3_$count"a | wc -l`
     if test $passed -gt 0; then
-        printf "${FAIL}==> Test 3 (usage) --- failed${NC}\n"
+        printf "${FAIL}Test 3 (usage) --- failed${NC}\n"
         echo "difference below:"
         diff "add_t3_$count" "add_t3_$count"a
         exit
     fi
     count=$(($count + 1))
 done
-printf "${PASS}==> Test 3 (usage) --- passed!${NC}\n"
+printf " ${PASS}Test 3 (usage) --- passed!${NC}\n"
 rm add_t3*
+
+rm add_*

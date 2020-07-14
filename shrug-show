@@ -1,5 +1,23 @@
 #!/bin/dash
 
+if ! test -d ".shrug"; then
+    >&2 echo "shrug-show: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
+if test $# -eq 0 || test $# -gt 1; then
+    >&2 echo "usage: shrug-show <commit>:<filename>"
+    exit 1
+fi
+
+if test $# -eq 1; then
+    check=`echo "$1" | egrep ':' | wc -l`
+    if test $check -eq 0; then
+        >&2 echo "shrug-show: error: invalid object $1"
+        exit 1
+    fi
+fi
+
 branch=`cat ".shrug/branch.txt" | head -1`
 logfiles=".shrug/.$branch/.log"
 indexfiles=".shrug/.$branch/.index"
@@ -17,13 +35,16 @@ else
     if ! test "$ncommit" = ""; then
         count=`ls "$logfiles/" | egrep "$ncommit-*" | wc -l | sed 's/ /,/' | cut -d, -f1`
         if test $count -eq 0; then
-            echo "shrug-show: error: unknown commit '$ncommit'"
+            >&2 echo "shrug-show: error: unknown commit '$ncommit'"
+            exit 1
         else
-            echo "shrug-show: error: '$filename' not found in commit $ncommit"
+            >&2 echo "shrug-show: error: '$filename' not found in commit $ncommit"
+            exit 1
         fi
     else
         if ! test -f "$indexfiles/$filename"; then
-            echo "shrug-show: error: '$filename' not found in index"
+            >&2 echo "shrug-show: error: '$filename' not found in index"
+            exit 1
         else
             cat "$indexfiles/$filename"
         fi

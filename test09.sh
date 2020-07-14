@@ -7,7 +7,8 @@
 ## scripts.
 
 ## My thought process in doing each of these files was to test things
-## that aren't already tested by the given basic autotests.s
+## that aren't already tested by the given basic autotests, besides some
+## stuff that felt naturally necessary to test anyway.
 
 ## I will be using the ref implementation as my source of confirmation
 ## for passing or failing a test.

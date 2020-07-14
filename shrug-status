@@ -1,16 +1,26 @@
 #!/bin/dash
 
+if ! test -d ".shrug"; then
+    >&2 echo "shrug-status: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
 branch=`cat ".shrug/branch.txt" | head -1`
 index=".shrug/.$branch/.index"
 log=".shrug/.$branch/.log/log.txt"
 repo=".shrug/.$branch/*"
-
-commits=`wc -l $log | sed 's/ /,/' | cut -d, -f1`
+commits=`cat ".shrug/branch.txt" | tail -1`
 
 if test $commits -eq 0; then
-    echo "shrug-status: error: your repository does not have any commits yet"
-    exit
+    >&2 echo "shrug-status: error: your repository does not have any commits yet"
+    exit 1
 fi
+
+if test $# -gt 0; then
+    >&2 echo "usage: shrug-status"
+    exit 1
+fi
+
 
 printf "" > ".shrug/.$branch/.log/status.txt"
 

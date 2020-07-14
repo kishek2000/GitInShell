@@ -50,3 +50,13 @@ DATE		Start		End		    Activity		                Comments
 ""/""/""""  5:30pm      6:00pm      pushing version to git,         Just setup some more tests in subset 1 functions, currently just some
                                     writing more tests              simple error checks - already found things to fix and edit! Lovely. 
                                                                     Committed it up, will continue tomorrow now.
+14/07/2020  11:00am     5:30pm      writing more tests, coding      Continued writing my test scripts, and cascaded a large amount of changes
+                        (took a                                     regarding exit status and writing my error messages to stderr. Final 
+                        lunch break                                 things that are left to do are:
+                        from                                            -> add some more cases to merge test script
+                        1:30-2:30pm)                                    -> clean up all the echo debug statements                                                              
+                                                                        -> add some comments throughout of my process and thinking
+                                                                        -> submit!
+                                                                    Also i just pushed to git and kinda removed my diary, so I'm recommitting
+                                                                    now. Thankfully I use sftp in vscode so then a local version was saved, jesus.
+                                                                    Ahhhh almost done!

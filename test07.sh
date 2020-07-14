@@ -19,9 +19,7 @@ FAIL='\033[0;31m'
 NC='\033[0m'
 
 echo
-echo "============================================="
 echo "========== Testing shrug-status... =========="
-echo "============================================="
 echo
 
 ##
@@ -158,7 +156,7 @@ do
     file_comparisons=1
     while test $file_comparisons -le 3; 
     do
-        printf ":"
+        printf "."
         same=`diff "status_tmpfile_$file_comparisons"_t4 "status_tmpfile_$file_comparisons"_t4 | wc -l`
         if test $same -gt 0; then
             printf " ${FAIL}Test 4 (variety of files) --- different file contents present:${NC}\n"

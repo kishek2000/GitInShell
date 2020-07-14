@@ -19,9 +19,7 @@ FAIL='\033[0;31m'
 NC='\033[0m'
 
 echo
-echo "============================================="
 echo "=========== Testing shrug-init... ==========="
-echo "============================================="
 echo
 
 ##
@@ -88,4 +86,4 @@ done
 printf " ${PASS}Test 2 (shrug existing already) --- passed!${NC}\n"
 rm init_t2*
 
-rm init_*
+rm init_* 2>/dev/null

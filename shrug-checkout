@@ -1,11 +1,33 @@
 #!/bin/dash
 
+if ! test -d ".shrug"; then
+    >&2 echo "shrug-checkout: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi 
+
+if test $# -eq 1 && test "$1" = "-d"; then
+    >&2 echo "shrug-checkout: error: branch name required"
+    exit 1
+fi
+
 branch=`cat ".shrug/branch.txt" | head -1`
+commits=`cat ".shrug/branch.txt" | tail -1`
+
+if test $commits -eq 0; then
+    >&2 echo "shrug-checkout: error: your repository does not have any commits yet"
+    exit 1
+fi
+
+if test $# -gt 1; then
+    >&2 echo "usage: shrug-checkout <branch>"
+    exit 1
+fi
 
 if test "$1" = "$branch"; then
     echo "Already on '$branch'"
 elif ! test -d ".shrug/.$1"; then
-    echo "shrug-checkout: error: unknown branch '$1'"
+    >&2 echo "shrug-checkout: error: unknown branch '$1'"
+    exit 1
 else
     existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt"`
     for f in $existing_files
@@ -45,11 +67,11 @@ else
                     fi
                 # fi
                     test "$error" = "true" && # echo "the error files are as follows: '$errorfiles'" &&
-                    echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
+                    >&2 echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
                     for nomerge in $errorfiles
                     do
                         echo "$nomerge"
-                    done && exit
+                    done && exit 1
                     test "$error" = "false" && cp "$f" ".shrug/.$1/.files"
                 fi
             fi
@@ -76,11 +98,11 @@ else
                     errorfiles="$errorfiles$f "
                 fi
                 test "$error" = "true" && # echo "the error files are as follows: '$errorfiles'" &&
-                echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
+                >&2 echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
                 for nomerge in $errorfiles
                 do
                     echo "$nomerge"
-                done && exit
+                done && exit 1
                 test "$error" = "false" && cp "$f" ".shrug/.$1/.files"
             # else
 

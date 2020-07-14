@@ -1,33 +1,55 @@
 #!/bin/dash
 
+if ! test -d ".shrug"; then
+    >&2 echo "shrug-branch: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi 
+
 branch=`cat ".shrug/branch.txt" | head -1`
 commits=`cat ".shrug/branch.txt" | tail -1`
 
 if test $commits -eq 0; then
-    echo "shrug-branch: error: your repository does not have any commits yet"
-    exit
+    >&2 echo "shrug-branch: error: your repository does not have any commits yet"
+    exit 1
 fi
 
+if test $# -eq 1 && test "$1" = "-d"; then
+    >&2 echo "shrug-branch: error: branch name required"
+    exit 1
+fi
+
+if test $# -ge 2; then
+    if test $# -eq 2; then
+        if test "$1" != "-d"; then
+            >&2 echo "usage: shrug-branch [-d] <branch>"
+            exit 1
+        fi
+    else
+        >&2 echo "usage: shrug-branch [-d] <branch>"
+        exit 1
+    fi
+    
+fi
 if test "$1" = "-d"; then
-    test "$2" = "master" && echo "shrug-branch: error: can not delete branch '$2'" && exit
-    test "$2" = "$branch" && echo "shrug-branch: error: you are currently in this branch. Move to another to delete it." && exit
-    ! test -d ".shrug/.$2" && echo "shrug-branch: error: branch '$2' does not exist" && exit
+    test "$2" = "master" && >&2 echo "shrug-branch: error: can not delete branch '$2'" && exit 1
+    test "$2" = "$branch" && >&2 echo "shrug-branch: error: you are currently in this branch. Move to another to delete it." && exit 1
+    ! test -d ".shrug/.$2" && >&2 echo "shrug-branch: error: branch '$2' does not exist" && exit 1
 
     for file in .shrug/.$2/.files/*
     do
         filename=`basename $file`
         if test -f "$filename"; then
             difference=`diff "$filename" "$file" | wc -l`
-            test $difference -gt 0 && echo "shrug-branch: error: branch '$2' has unmerged changes" && exit
+            test $difference -gt 0 && >&2 echo "shrug-branch: error: branch '$2' has unmerged changes" && exit 1
         else
-            # echo "$filename not here" && ls
-            echo "shrug-branch: error: branch '$2' has unmerged changes" && exit
+            >&2 echo "shrug-branch: error: branch '$2' has unmerged changes"
+            exit 1
         fi
     done
 
-    test -d ".shrug/.$2" && rm -r ".shrug/.$2" && echo "Deleted branch '$2'"
+    rm -r ".shrug/.$2" && echo "Deleted branch '$2'"
 elif test "$#" = "1"; then
-    test -d ".shrug/.$1" && echo "shrug-branch: error: branch '$1' already exists" && exit
+    test -d ".shrug/.$1" && >&2 echo "shrug-branch: error: branch '$1' already exists" && exit 1
 
     existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt"`
     ! test -d ".shrug/.$branch/.files" && mkdir ".shrug/.$branch/.files"

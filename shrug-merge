@@ -1,22 +1,41 @@
 #!/bin/dash
 
+if ! test -d ".shrug"; then
+    >&2 echo "shrug-merge: error: no .shrug directory containing shrug repository exists"
+    exit 1
+fi
+
 branch=`cat ".shrug/branch.txt" | head -1`
 log_master=".shrug/.$branch/.log/log.txt"
 commits=`wc -l $log_master | sed 's/ /,/' | cut -d, -f1`
 
 if test $commits -eq 0; then
-    echo "shrug-merge: error: your repository does not have any commits yet"
-    exit
+    >&2 echo "shrug-merge: error: your repository does not have any commits yet"
+    exit 1
 fi
 
-if test "$2" != "-m" || test "$3" = ""; then
-    echo "shrug-merge: error: empty commit message"
-    exit
+if test $# -ge 0; then
+    test $# -eq 0 &&
+    >&2 echo "usage: shrug-merge <branch|commit> -m message" &&
+    exit 1
+    
+    test $# -gt 1 && test "$2" != "-m" &&
+    >&2 echo "usage: shrug-merge <branch|commit> -m message" &&
+    exit 1
+
+    test $# -eq 2 &&
+    >&2 echo "usage: shrug-merge <branch|commit> -m message" &&
+    exit 1
+fi
+
+if  test $# -eq 1 || test "$3" = ""; then
+    >&2 echo "shrug-merge: error: empty commit message"
+    exit 1
 fi
 
 if ! test -d ".shrug/.$1"; then
-    echo "shrug-merge: error: unknown branch '$1'"
-    exit
+    >&2 echo "shrug-merge: error: unknown branch '$1'"
+    exit 1
 else
     error="false"
     errorfiles=""
@@ -76,7 +95,7 @@ else
                         break
                     fi
                 done
-                test $merged -gt 0 && echo "Already up to date" && exit
+                test $merged -gt 0 && >&2 echo "Already up to date" && exit 0
                 
                 # echo "diff output for diff between latest common commit and merging branch:"
                 # diff "$latest_common_commit" ".shrug/.$1/.log/$latest_branch_version-$filename"
@@ -176,11 +195,11 @@ else
 
 
     test "$error" = "true" && 
-    echo "shrug-merge: error: These files can not be merged:" && 
+    >&2 echo "shrug-merge: error: These files can not be merged:" && 
     for nomerge in $errorfiles
     do
         echo "$nomerge"
-    done
+    done && exit 1
 
     if test "$error" = "false" && test "$copyall" = "true"; then
         ## to check if we fast forward, or are already up to date, we diff the currdir file 
@@ -209,7 +228,8 @@ else
                 index_and_repo=`diff "$filename" ".shrug/.$branch/$filename" | wc -l`
 
                 if test $index_and_curr -gt 0 || test $index_and_repo -gt 0; then
-                    echo "shrug-merge: error: can not merge: local changes to files"
+                    >&2 echo "shrug-merge: error: can not merge: local changes to files"
+                    exit 1
                 else
                     cp "$file" ./
                     cp "$file" ".shrug/.$branch/"
@@ -224,9 +244,9 @@ else
             fi
         done
         # echo "fast_forward: $fast_forward, difference: $difference"
-        test "$fast_forward" = "false" && echo "Already up to date"
+        test "$fast_forward" = "false" && echo "Already up to date" && exit 0
         test "$fast_forward" = "true" && echo "Fast-forward: no commit created" &&
-        cat ".shrug/.$1/.log/log.txt" >> ".shrug/.$branch/.log/log.txt"
+        cat ".shrug/.$1/.log/log.txt" >> ".shrug/.$branch/.log/log.txt" && exit 0
     fi
 
     committed=0
@@ -274,7 +294,7 @@ else
             
             ## Firstly before we get started in merging stuff, let's check if we are already up to date.
             curr_and_branch=`diff "$filename" ".shrug/.$1/.log/$latest_branch_version-$filename" | wc -l`            
-            test $curr_and_branch -eq 0 && echo "Already up to date" && exit
+            test $curr_and_branch -eq 0 && echo "Already up to date" && exit 0
 
             ## Secondly, let's make sure that we don't have any local changes:
             index_and_curr=0
@@ -287,7 +307,8 @@ else
             index_and_repo=`diff "$filename" ".shrug/.$branch/$filename" | wc -l`
 
             if test $index_and_curr -gt 0 || test $index_and_repo -gt 0; then
-                echo "shrug-merge: error: can not merge: local changes to files"
+                >&2 echo "shrug-merge: error: can not merge: local changes to files"
+                exit 1
             fi
 
             ## To do the merging, we want to compare our file from the branch getting merged into our current branch, and the file

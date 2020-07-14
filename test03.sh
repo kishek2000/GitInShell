@@ -49,7 +49,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS} Test 1 (no repo) --- passed!${NC}\n"
+printf "\n${PASS} Test 1 (no repo) ---> passed!${NC}\n"
 rm commit_t1*
 
 ##
@@ -83,7 +83,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS} Test 2 (command line arguments) --- passed!${NC}\n"
+printf "\n${PASS} Test 2 (command line arguments) ---> passed!${NC}\n"
 rm commit_t2*
 
 rm commit_*

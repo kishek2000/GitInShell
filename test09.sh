@@ -51,7 +51,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 1 (no repo) --- passed!${NC}\n"
+printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
 rm checkout_t1*
 
 ##
@@ -83,7 +83,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 2 (no commits) --- passed!${NC}\n"
+printf "\n${PASS}Test 2 (no commits) ---> passed!${NC}\n"
 rm checkout_t2*
 
 ##
@@ -121,7 +121,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 3 (cmd args) --- passed!${NC}\n"
+printf "\n${PASS}Test 3 (cmd args) ---> passed!${NC}\n"
 rm checkout_t3*
 
 ##
@@ -182,7 +182,7 @@ echo "difference below for checkout_t4_$count checkout_t4_$count a:" &&
 diff "checkout_t4_$count" "checkout_t4_$count"a &&
 exit
 
-printf "...... ${PASS}Test 4 (form a checkout) --- passed!${NC}\n"
+printf "......\n${PASS}Test 4 (form a checkout) ---> passed!${NC}\n"
 rm checkout_t4*
 rm checkout_*
 rm status_*

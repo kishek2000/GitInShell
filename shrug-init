@@ -16,6 +16,7 @@ else
     touch ".shrug/branch.txt"
     echo "master" > ".shrug/branch.txt"
     echo 0 >> ".shrug/branch.txt"
+    echo f > ".shrug/.master/.merged/merge.txt"
     touch ".shrug/.master/.log/log.txt"
     touch ".shrug/.master/.log/bin.txt"
     touch ".shrug/.master/.log/status.txt"

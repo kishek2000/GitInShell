@@ -51,7 +51,7 @@ if test "$1" = "-d"; then
 elif test "$#" = "1"; then
     test -d ".shrug/.$1" && >&2 echo "shrug-branch: error: branch '$1' already exists" && exit 1
 
-    existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt"`
+    existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt" | egrep -v "test*" | egrep -v "merge*"`
     ! test -d ".shrug/.$branch/.files" && mkdir ".shrug/.$branch/.files"
     for f in $existing_files
     do
@@ -59,7 +59,6 @@ elif test "$#" = "1"; then
     done
     
     cp -r ".shrug/.$branch" ".shrug/.$1"
-    # printf "" > ".shrug/.$1/.log/log.txt"
     test -f ".shrug/.$1/.merged/*.*" && rm ".shrug/.$1/.merged/*.*"
     printf "" > ".shrug/.$1/.log/bin.txt"
     printf "" > ".shrug/.$1/.log/status.txt"

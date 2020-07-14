@@ -18,11 +18,9 @@ then
 fi 
 
 branch=`cat ".shrug/branch.txt" | head -1`
-# cat ".shrug/branch.txt"
 FILES=".shrug/.$branch/.index/*"
 log=".shrug/.$branch/.log/log.txt"
-# cat $log
-logcommits=".shrug/.$branch/.log/*"
+log_commits=".shrug/.$branch/.log/*"
 message="$2"
 
 if test $1 = "-a" && test $2 = "-m";
@@ -34,7 +32,6 @@ then
         test "$filename" = "*" && continue;
         if test -f ".shrug/.$branch/.index/$filename";
         then
-            # echo "proceeding to move $FILE into .shrug/.$branch/.index/$filename"
             cp "$FILE" ".shrug/.$branch/.index/$filename"
         fi
     done
@@ -47,19 +44,17 @@ then
     changes=0
     for FILE in $FILES
     do
-        latestfilecommit="-"
+        latest_file_commit="-"
         latestallcommit="-"
         filename=`echo $FILE | sed 's/.shrug\/.*\/.index\///'`
         test "$filename" = "*" && continue;
-        filecommits=`ls -l $logcommits | egrep "[0-9]*-$filename" | wc -l`
+        filecommits=`ls -l $log_commits | egrep "[0-9]*-$filename" | wc -l`
 
         if test "$filecommits" -gt 0; then
-            latestfilecommit=`ls $logcommits | egrep "[0-9]*-$filename" | sed 's/.shrug\/.*\/.log\///' | cut -d '-' -f1 | sort -r | head -1`
-            latestallcommit=`ls $logcommits | egrep "[0-9]*-.*" | sed 's/.shrug\/.*\/.log\///' | cut -d '-' -f1 | sort -r | head -1`
-            # echo $latestfilecommit yo
-            # echo $latestallcommit
-            if test "$latestfilecommit" = "$latestallcommit"; then
-                difference=`diff "$FILE" ".shrug/.$branch/.log/$latestfilecommit-$filename" | wc -l`
+            latest_file_commit=`ls $log_commits | egrep "[0-9]*-$filename" | sed 's/.shrug\/.*\/.log\///' | cut -d '-' -f1 | sort -r | head -1`
+            latestallcommit=`ls $log_commits | egrep "[0-9]*-.*" | sed 's/.shrug\/.*\/.log\///' | cut -d '-' -f1 | sort -r | head -1`
+            if test "$latest_file_commit" = "$latestallcommit"; then
+                difference=`diff "$FILE" ".shrug/.$branch/.log/$latest_file_commit-$filename" | wc -l`
                 changes=$(($changes + $difference))
             else
                 changes=1
@@ -68,7 +63,6 @@ then
             changes=1
         fi
     done
-    # echo $changes
     file_deletion_commits=`cat ".shrug/.$branch/.log/bin.txt" | wc -l`
     deletion_commits=0
     deleted_files=`cat ".shrug/.$branch/.log/bin.txt" | cut -d ' ' -f1`
@@ -80,9 +74,9 @@ then
             deletion_commits=$(($deletion_commits + 1))
         fi
     done
-    # echo $changes, $deletion_commits, $file_deletion_commits
+    merge_called=`cat ".shrug/.$branch/.merged/merge.txt"`
+    test "$merge_called" = "t" && changes=$(($changes + 1))
     changes=$(($file_deletion_commits + $changes + $deletion_commits))
-    # echo "ncommit $ncommit"
 
     if test "$changes" -gt 0; then
         for FILE in $FILES
@@ -97,11 +91,9 @@ then
         echo "Committed as commit $ncommit"
         echo "$ncommit $message" >> "$log"
         ncommit=$(($ncommit + 1))
-        # test $ncommit -eq 0 && echo "$ncommit $message" > "$log"
         sed -i '2s/.*/'$ncommit/ ".shrug/branch.txt"
-        # echo "ncommit $ncommit"
-        # cat ".shrug/branch.txt"
         printf "" > ".shrug/.$branch/.log/bin.txt"
+        echo "f" > ".shrug/.$branch/.merged/merge.txt"
     else
         test $committed -eq 0 && echo "nothing to commit"
     fi

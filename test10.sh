@@ -51,7 +51,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 1 (no repo) --- passed!${NC}\n"
+printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
 rm merge_t1*
 
 ##
@@ -83,7 +83,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 2 (no commits) --- passed!${NC}\n"
+printf "\n${PASS}Test 2 (no commits) ---> passed!${NC}\n"
 rm merge_t2*
 
 ##
@@ -127,6 +127,196 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 3 (cmd args) --- passed!${NC}\n"
+printf "\n${PASS}Test 3 (cmd args) ---> passed!${NC}\n"
 rm merge_t3*
 
+##
+## Test 04 - merging the deletion of files
+##
+
+# === my file === #
+rm -rf .shrug
+./shrug-init > merge_tmp
+seq 1 7 > file.txt
+./shrug-add file.txt 
+./shrug-commit -m "first-commit, no.0" > merge_tmp
+./shrug-branch b1 > merge_tmp
+./shrug-checkout b1 > merge_tmp
+echo "hello world" > b
+./shrug-add b
+./shrug-commit -m "second-commit, no.1" > merge_tmp
+./shrug-status | egrep -v "merge_t4" 2> merge_t4_1 > merge_t4_1
+./shrug-rm b
+./shrug-status | egrep -v "merge_t4" 2> merge_t4_2 > merge_t4_2
+./shrug-commit -m "third commit - deleted b, no.2" > merge_tmp
+./shrug-status | egrep -v "merge_t4" 2> merge_t4_3 > merge_t4_3
+./shrug-checkout master > merge_tmp
+./shrug-merge b1 -m "merge branch" > merge_t4_4
+./shrug-show :b 2> merge_t4_5 > merge_t4_5
+./shrug-show 1:b 2> merge_t4_6 > merge_t4_6
+./shrug-log 2> merge_t4_7 > merge_t4_7
+./shrug-status | egrep -v "merge_t4" 2> merge_t4_8 > merge_t4_8
+
+# === reference === #
+rm -rf .shrug
+2041 shrug-init > merge_tmp
+seq 1 7 > file.txt
+2041 shrug-add file.txt 
+2041 shrug-commit -m "first-commit, no.0" > merge_tmp
+2041 shrug-branch b1 > merge_tmp
+2041 shrug-checkout b1 > merge_tmp
+echo "hello world" > b
+2041 shrug-add b
+2041 shrug-commit -m "second-commit, no.1" > merge_tmp
+2041 shrug-status | egrep -v "merge_t4" 2> merge_t4_1a > merge_t4_1a
+2041 shrug-rm b
+2041 shrug-status | egrep -v "merge_t4" 2> merge_t4_2a > merge_t4_2a
+2041 shrug-commit -m "third commit - deleted b, no.2" > merge_tmp
+2041 shrug-status | egrep -v "merge_t4" 2> merge_t4_3a > merge_t4_3a
+2041 shrug-checkout master > merge_tmp
+2041 shrug-merge b1 -m "merge branch" > merge_t4_4a
+2041 shrug-show :b 2> merge_t4_5a > merge_t4_5a
+2041 shrug-show 1:b 2> merge_t4_6a > merge_t4_6a
+2041 shrug-log 2> merge_t4_7a > merge_t4_7a
+2041 shrug-status | egrep -v "merge_t4" 2> merge_t4_8a > merge_t4_8a
+
+count=1
+while test $count -le 7
+do
+    printf "."
+    passed=`diff "merge_t4_$count" "merge_t4_$count"a | wc -l`
+    if test $passed -gt 0; then
+        printf " ${FAIL}Test 4 (merging file deletions) --- failed${NC}\n"
+        echo "difference below:"
+        echo "merge_t4_$count" "merge_t4_$count"a
+        diff "merge_t4_$count" "merge_t4_$count"a
+        exit
+    fi
+    count=$(($count + 1))
+done
+printf "\n${PASS}Test 4 (merging file deletions) ---> passed!${NC}\n"
+rm merge_t4*
+
+##
+## Test 05 - consecutive line changes (additon, replacement and deletion all in one)
+##
+
+# === my file === #
+rm -rf .shrug
+./shrug-init > merge_tmp
+seq 2 7 > file.txt
+./shrug-add file.txt 
+./shrug-commit -m "first-commit, no.0" > merge_tmp
+./shrug-branch b1 > merge_tmp
+./shrug-checkout b1 > merge_tmp
+seq 2 5 > file.txt
+./shrug-commit -a -m "second-commit, no.1" > merge_tmp
+./shrug-status | egrep -v "merge_t5" 2> merge_t5_1 > merge_t5_1
+./shrug-checkout master > merge_tmp
+seq 0 5 > file.txt
+./shrug-commit -a -m "third-commit, no.2" > merge_tmp
+./shrug-merge b1 -m "merge branch" 2> merge_t5_2 > merge_t5_2
+cat file.txt 2> merge_t5_3 > merge_t5_3
+./shrug-log 2> merge_t5_4 > merge_t5_4
+./shrug-status | egrep -v "merge_t5" 2> merge_t5_5 > merge_t5_5
+
+# === reference === #
+rm -rf .shrug
+2041 shrug-init > merge_tmp
+seq 2 7 > file.txt
+2041 shrug-add file.txt 
+2041 shrug-commit -m "first-commit, no.0" > merge_tmp
+2041 shrug-branch b1 > merge_tmp
+2041 shrug-checkout b1 > merge_tmp
+seq 2 5 > file.txt
+2041 shrug-commit -a -m "second-commit, no.1" > merge_tmp
+2041 shrug-status | egrep -v "merge_t5" 2> merge_t5_1a > merge_t5_1a
+2041 shrug-checkout master > merge_tmp
+seq 0 5 > file.txt
+2041 shrug-commit -a -m "third-commit, no.2" > merge_tmp
+2041 shrug-merge b1 -m "merge branch" 2> merge_t5_2a > merge_t5_2a
+cat file.txt 2> merge_t5_3a > merge_t5_3a
+2041 shrug-log 2> merge_t5_4a > merge_t5_4a
+2041 shrug-status | egrep -v "merge_t5" 2> merge_t5_5a > merge_t5_5a
+
+
+count=1
+while test $count -le 5
+do
+    printf "."
+    passed=`diff "merge_t5_$count" "merge_t5_$count"a | wc -l`
+    if test $passed -gt 0; then
+        printf " ${FAIL}Test 5 (merge with consecutive lines change) --- failed${NC}\n"
+        echo "difference below:"
+        echo "merge_t5_$count" "merge_t5_$count"a
+        diff "merge_t5_$count" "merge_t5_$count"a
+        exit
+    fi
+    count=$(($count + 1))
+done
+printf "\n${PASS}Test 5 (merge with consecutive lines change) ---> passed!${NC}\n"
+rm merge_t5*
+
+#
+# Test 06 - harder merge (additon, replacement and deletion all in one) -> this currently fails.
+#
+
+# === my file === #
+rm -rf .shrug
+./shrug-init > merge_tmp
+seq 2 7 > file.txt
+./shrug-add file.txt 
+./shrug-commit -m "first-commit, no.0" > merge_tmp
+./shrug-branch b1 > merge_tmp
+./shrug-checkout b1 > merge_tmp
+seq 2 10 > file.txt
+./shrug-commit -a -m "second-commit, no.1" > merge_tmp
+./shrug-status | egrep -v "merge_t6" 2> merge_t6_1 > merge_t6_1
+./shrug-checkout master > merge_tmp
+echo 1 > file.txt
+echo 3 >> file.txt
+./shrug-commit -a -m "third-commit, no.2" > merge_tmp
+./shrug-merge b1 -m "merge branch" > merge_t6_2
+cat file.txt 2> merge_t6_3 > merge_t6_3
+./shrug-log 2> merge_t6_4 > merge_t6_4
+./shrug-status | egrep -v "merge_t6" 2> merge_t6_5 > merge_t6_5
+
+# === reference === #
+rm -rf .shrug
+2041 shrug-init > merge_tmp
+seq 2 7 > file.txt
+2041 shrug-add file.txt 
+2041 shrug-commit -m "first-commit, no.0" > merge_tmp
+2041 shrug-branch b1 > merge_tmp
+2041 shrug-checkout b1 > merge_tmp
+seq 2 10 > file.txt
+2041 shrug-commit -a -m "second-commit, no.1" > merge_tmp
+2041 shrug-status | egrep -v "merge_t6" 2> merge_t6_1a > merge_t6_1a
+2041 shrug-checkout master > merge_tmp
+echo 1 > file.txt
+echo 3 >> file.txt
+2041 shrug-commit -a -m "third-commit, no.2" > merge_tmp
+2041 shrug-merge b1 -m "merge branch" 2> merge_t6_2a > merge_t6_2a
+cat file.txt 2> merge_t6_3a > merge_t6_3a
+2041 shrug-log 2> merge_t6_4a > merge_t6_4a
+2041 shrug-status | egrep -v "merge_t6" 2> merge_t6_5a > merge_t6_5a
+
+count=1
+while test $count -le 5
+do
+    printf "."
+    passed=`diff "merge_t6_$count" "merge_t6_$count"a | wc -l`
+    if test $passed -gt 0; then
+        printf "\n${FAIL}Test 6 (harder merge) --- failed${NC}\n"
+        echo "difference below:"
+        echo "merge_t6_$count" "merge_t6_$count"a
+        diff "merge_t6_$count" "merge_t6_$count"a
+        rm merge_*
+        exit
+    fi
+    count=$(($count + 1))
+done
+printf "\n${PASS}Test 6 (harder merge) ---> passed!${NC}\n"
+rm merge_t6*
+
+rm merge_*

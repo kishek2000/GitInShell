@@ -24,7 +24,6 @@ indexfiles=".shrug/.$branch/.index"
 filename=`echo $1 | sed 's/:/ /' | cut -d' ' -f2`
 ncommit=`echo $1 | sed 's/:/ /' | cut -d' ' -f1`
 
-# echo $filename
 if test "$ncommit" = "" && test -f "$indexfiles/$filename";
 then
     cat "$indexfiles/$filename"

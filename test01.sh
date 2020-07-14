@@ -51,7 +51,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 1 (command line args) --- passed!${NC}\n"
+printf "\n${PASS}Test 1 (command line args) ---> passed!${NC}\n"
 rm init_t1*
 
 ##
@@ -83,7 +83,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 2 (shrug existing already) --- passed!${NC}\n"
+printf "\n${PASS}Test 2 (shrug existing already) ---> passed!${NC}\n"
 rm init_t2*
 
 rm init_* 2>/dev/null

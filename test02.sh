@@ -49,7 +49,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 1 (no repo) --- passed!${NC}\n"
+printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
 rm add_t1*
 
 ##
@@ -81,7 +81,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 2 (nonexistent files) --- passed!${NC}\n"
+printf "\n${PASS}Test 2 (nonexistent files) ---> passed!${NC}\n"
 rm add_t2*
 
 ##
@@ -113,7 +113,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 3 (usage) --- passed!${NC}\n"
+printf "\n${PASS}Test 3 (usage) ---> passed!${NC}\n"
 rm add_t3*
 
 rm add_*

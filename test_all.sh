@@ -24,6 +24,7 @@ sh test06.sh
 sh test07.sh
 sh test08.sh
 sh test09.sh
+sh test10.sh
 echo
 echo "============================================="
 echo "=========== TESTING SHRUG COMPLETE =========="

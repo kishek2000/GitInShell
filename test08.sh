@@ -49,7 +49,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 1 (no repo) --- passed!${NC}\n"
+printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
 rm branch_t1*
 
 ##
@@ -81,7 +81,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 2 (no commits) --- passed!${NC}\n"
+printf "\n${PASS}Test 2 (no commits) ---> passed!${NC}\n"
 rm branch_t2*
 
 ##
@@ -119,7 +119,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 3 (cmd args) --- passed!${NC}\n"
+printf "\n${PASS}Test 3 (cmd args) ---> passed!${NC}\n"
 rm branch_t3*
 
 ##
@@ -159,7 +159,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 4 (form a branch) --- passed!${NC}\n"
+printf "\n${PASS}Test 4 (form a branch) ---> passed!${NC}\n"
 rm branch_t4*
 rm branch_*
 
@@ -200,6 +200,6 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 5 (incorrect deletions) --- passed!${NC}\n"
+printf "\n${PASS}Test 5 (incorrect deletions) ---> passed!${NC}\n"
 rm branch_t4*
 rm branch_*

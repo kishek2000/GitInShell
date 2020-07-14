@@ -49,7 +49,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 1 (no repo) --- passed!${NC}\n"
+printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
 rm status_t1*
 
 ##
@@ -81,7 +81,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 2 (no commits) --- passed!${NC}\n"
+printf "\n${PASS}Test 2 (no commits) ---> passed!${NC}\n"
 rm status_t2*
 
 ##
@@ -119,7 +119,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 3 (cmd args) --- passed!${NC}\n"
+printf "\n${PASS}Test 3 (cmd args) ---> passed!${NC}\n"
 rm status_t3*
 
 ##
@@ -173,7 +173,7 @@ do
     fi
     count=$(($count + 1))
 done
-printf " ${PASS}Test 4 (variety of files) --- passed!${NC}\n"
+printf "\n${PASS}Test 4 (variety of files) ---> passed!${NC}\n"
 rm status_t4*
 
 

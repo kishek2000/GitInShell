@@ -91,3 +91,6 @@ DATE		START		END		    ACTIVITY		                COMMENTS
                                                                     fixing some style, and adding comments - and have now pushed this version. I may try 
                                                                     a couple things with shrug-show and add one of the tests I did in my checkout test script,
                                                                     but only if I have time. This may be my last submission :).
+""/""/""""  6:40pm      7:20pm      fixed shrug-show, added         All done from my end now. I fixed shrug-show to work better with branches. As a whole now
+                                    shrug-show test, finalised      I'm really happy with my effort, and hope it goes well :). To you reading, thanks for
+                                    submission.                     following along :D.

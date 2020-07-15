@@ -72,6 +72,7 @@ DATE        START       END         ACTIVITY                       COMMENTS
                                                                    Also i just pushed to git and kinda removed my diary, so I'm recommitting
                                                                    now. Thankfully I use sftp in vscode so then a local version was saved, jesus.
                                                                    Ahhhh almost done!
+
 ""/""/""""  7:10pm      10:53pm     cleaning up comments, wrote    Just finished off my basic test scripts that I think I'll leave as is now for 
                                     more tests, coding, debugging  tomorrow's submission. I'm hoping to try a few more things with shrug-show in
                                                                    different branches to make sure I've got that right. I solved a couple cool 
@@ -82,14 +83,17 @@ DATE        START       END         ACTIVITY                       COMMENTS
                                                                    Also a quick fyi, the dots in my tests when you run them are the amount of 
                                                                    cases or comparisons that are done for each test. Usually there's a minimum of
                                                                    2 cases/comparisons. Comparisons meaning my output vs reference implementation.
+
 15/07/2020  12:30pm     1:17pm      solving my test!               I solved my hard merge case! I understood that it was just about how I was 
                                                                    identifying conflicts, and now I think it's a lot more robust. Time to push it 
                                                                    all up again.
+
 ""/""/""""  4:00pm      6:20pm      rewrote checkout, final        So I found some silly mistakes with checkout in some terminal tests, so I decided
                                     styling, comments              to rewrite my code there and ended up making something a lot cleaner. I then continued
                                                                    fixing some style, and adding comments - and have now pushed this version. I may try 
                                                                    a couple things with shrug-show and add one of the tests I did in my checkout test script,
                                                                    but only if I have time. This may be my last submission :).
+
 ""/""/""""  6:40pm      7:20pm      fixed shrug-show, added        All done from my end now. I fixed shrug-show to work better with branches. As a whole now
                                     shrug-show test, finalised     I'm really happy with my effort, and hope it goes well :). To you reading, thanks for
                                     submission.                    following along :D.

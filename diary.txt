@@ -7,7 +7,7 @@ DATE        START       END         ACTIVITY                       COMMENTS
 ""/""/""""  1:30pm      3:00pm      debugging/testing              Finally succeeded with the basic autotests for subset 0 and understood 
                                                                    some parallels with git through use of reference implementation.
                                                                    
-29/06/2020  11:30am     12:10pm		   coding and testing             Succeeded in simple passes for shrug-commit with the -a option in subset 
+29/06/2020  11:30am     12:10pm     coding and testing             Succeeded in simple passes for shrug-commit with the -a option in subset 
                                                                    1, and succeeded in some simple manual tests of shrug-status. next up 
                                                                    - shrug-rm!
 

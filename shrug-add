@@ -1,15 +1,27 @@
 #!/bin/dash
 
-repo=".shrug"
+########################################################################
+############################## SHRUG_ADD ###############################
+########################################################################
+
+## This file adds files provided, into the repo of the current branch.
+## The logic is:
+## -> if a .shrug subdir exists, and files have been provided, then;
+##      -> check if the file exists in the current working directory. if so, add to index.
+##      -> if not in current working directory, but it is a file in the current branch, then
+##         it is a deleted file and it should be stored as deleted in our bin.txt.
+##      -> if not in current working directory and not in the current branch, it is a nonexistent
+##         file.
+## -> if no .shrug subdir exists, or no files are provided, we have errors.
 
 if ! test -d ".shrug/"; then
     >&2 echo "shrug-add: error: no .shrug directory containing shrug repository exists"
-    exit
+    exit 1
 fi
 
 if test $# -eq 0; then
     >&2 echo "usage: shrug-add <filenames>"
-    exit
+    exit 1
 fi
 
 for var in "$@"
@@ -19,11 +31,11 @@ do
         cp "$var" ".shrug/.$branch/.index/"
     else
         branch=`cat ".shrug/branch.txt" | head -1`
-        if test -f "$repo/.$branch/$var"; then
-            echo "$var - deleted" > ".shrug/.$branch/.log/bin.txt" && rm "$repo/.$branch/$var"
+        if test -f ".shrug/.$branch/$var"; then
+            echo "$var - deleted" > ".shrug/.$branch/.log/bin.txt" && rm ".shrug/.$branch/$var"
         else
             >&2 echo "shrug-add: error: can not open '$var'"
-            exit
+            exit 1
         fi
     fi
 done

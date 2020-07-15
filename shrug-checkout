@@ -1,5 +1,18 @@
 #!/bin/dash
 
+########################################################################
+############################ SHRUG_CHECKOUT ############################
+########################################################################
+
+## This file switches to a provided branch, making the necessary copies of files too.
+## The logic is:
+## -> if a .shrug subdir exists, then;
+##      -> the overall logic is pretty simple: after handling all errors, what we overall
+##         aim to do is use the .files sub directory to our advantage. For the existing files
+##         in the current working directory, if we find that there are files that have unstaged
+##         or uncommitted changes, we copy them over.
+## -> handle errors otherwise.
+
 if ! test -d ".shrug"; then
     >&2 echo "shrug-checkout: error: no .shrug directory containing shrug repository exists"
     exit 1
@@ -24,71 +37,104 @@ if test $# -gt 1; then
 fi
 
 if test "$1" = "$branch"; then
-    echo "Already on '$branch'"
+    >&2 echo "Already on '$branch'"
+    exit 1
 elif ! test -d ".shrug/.$1"; then
     >&2 echo "shrug-checkout: error: unknown branch '$1'"
     exit 1
 else
-    existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt" | egrep -v "test*" | egrep -v "merge*"`
+    existing_files=`ls | tr ' ' '\n'`
+    error="false"
+    error_files=""
     for f in $existing_files
     do
-        cp "$f" ".shrug/.$branch/.files"
-        if test -d ".shrug/.$1/.files" && test -f ".shrug/.$1/.files/$f"; then
-            # copy over index for that file
-            test -f ".shrug/.$branch/.index/$f" && cp ".shrug/.$branch/.index/$f" ".shrug/.$1/.index/$f"
-            if test -f ".shrug/.$branch/$f"; then
-                # copy over file if it has unstaged changes, uncommitted changes.
-                dir_and_index=`diff ".shrug/.$branch/.index/$f" "$f" | wc -l`
-                index_and_repo=`diff ".shrug/.$branch/$f" ".shrug/.$branch/.index" | wc -l`
-                dir_and_repo=`diff ".shrug/.$branch/$f" "$f" | wc -l`
-                test $dir_and_index -gt 0 && cp "$f" ".shrug/.$1/.files"
-                test $index_and_repo -eq 0 && test $dir_and_repo -gt 0 && cp "$f" ".shrug/.$1/.files"
-                test $index_and_repo -eq 0 && test $dir_and_repo -eq 0 && test $dir_and_index -eq 0 && cp ".shrug/.$1/$f" ".shrug/.$1/.files" && cp ".shrug/.$1/$f" ".shrug/.$1/.index"
-            elif test -f ".shrug/.$branch/.files/$f"; then
-                # copy over file if it is untracked.
-                error="false"
-                errorfiles=""
-                if test -f ".shrug/.$branch/.files/$f" && ! test -f ".shrug/.$branch/$f" && ! test -f ".shrug/.$branch/.index/$f"; then
-                    if test -f ".shrug/.$1/.files/$f"; then
-                        difference=`diff ".shrug/.$1/.files/$f" ".shrug/.$branch/.files/$f" | wc -l`
-                        test $difference -gt 0 && error="true"
-                        errorfiles="$errorfiles$f "
-                    fi
-                    test "$error" = "true" && 
-                    >&2 echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
-                    for nomerge in $errorfiles
-                    do
-                        >&2 echo "$nomerge"
-                    done && exit 1
-                    test "$error" = "false" && cp "$f" ".shrug/.$1/.files"
-                fi
-            fi
-        else
-            # over here, this means that the file we are checking does not exist in the branch we are changing to, but it does
-            # in the current one. so, if untracked, let's add it to the branch we are changing to.
+        ## what we first need to check is, whether there are any files in the current branch that we are in, in the current
+        ## working directory, that are not currently in the index or the repo of the current branch, but is in the branch 
+        ## we are changing to, and the index and .files of that branch too. If so, we immediately append this file to our 
+        ## errors list because it will have changes overwritten if it changes back.
 
-            # what we need to do though, is check if there is a difference between this version, and the version in the branch
-            # we are going to - if any at all.
-            error="false"
-            errorfiles=""
-            if test -f ".shrug/.$branch/.files/$f" && ! test -f ".shrug/.$branch/$f" && ! test -f ".shrug/.$branch/.index/$f"; then
-                if test -f ".shrug/.$1/.files/$f"; then
-                    difference=`diff ".shrug/.$1/.files/$f" ".shrug/.$branch/.files/$f" | wc -l`
-                    test $difference -gt 0 && error="true"
-                    errorfiles="$errorfiles$f "
-                fi
-                test "$error" = "true" &&
-                >&2 echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
-                for nomerge in $errorfiles
-                do
-                    >&2 echo "$nomerge"
-                done && exit 1
-                test "$error" = "false" && cp "$f" ".shrug/.$1/.files"
+        if test -d ".shrug/.$1/.files" && test -f ".shrug/.$1/.files/$f"; then
+            ## so first, let's check if this file is in the index or repo of the changing branch, but not of the current:
+            ## if so, let's catch all these errors first and then iterate again after for making copies, if we found no errors.
+            if test -f ".shrug/.$1/.index/$f" && test -f ".shrug/.$1/$f" && ! test -f ".shrug/.$branch/$f" && ! test -f ".shrug/.$branch/.index/$f"; then
+                error="true"
+                error_files="$error_files$f "
             fi
+        fi        
+    done  
+
+    ## so if we found overwriting files, let's output them to stderr.    
+    if test "$error" = "true"; then
+         >&2 echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:"
+        for overwriting_changes in $error_files
+        do
+            >&2 echo "$overwriting_changes"
+        done
+        exit 1
+    fi
+
+    ## if we found no errors, then all we have to do is to copy over all files in the current working dir
+    ## into the .files for the current branch, to back the files up. We then need to copy all the files
+    ## in here, to the new branch - IF;
+    ## 1) the file is untracked ie not in the index or repo of current branch -> copy the file
+    ## 2) the file is in the index and repo, but the file has uncommitted changes -> copy the file and index
+    ## 3) the file is in the index and repo, but the file has local changes -> copy the file, and index file
+    ## 4) the file is in the index and repo of the current branch and fully committed -> copy the original
+    ## repo version of the file for the branch we are changing into, and paste it into its .files and index 
+    ## subdir. this is because we are restoring the version the branch split on. Of course, this restoration
+    ## is only applicable if the 
+
+    ## So one of the cases that also happens now is, we have a file that is eventually committed in the branch
+    ## its changes originate from. At this point, the other branch should be maintaining the version of the file
+    ## it held by itself.
+
+    for f in $existing_files
+    do
+        cp "$f" ".shrug/.$branch/.files" 
+        ## Case 1)
+        if ! test -f ".shrug/.$branch/$f" && ! test -f ".shrug/.$branch/.index/$f"; then
+            cp "$f" ".shrug/.$1/.files"
         fi
+        ## Case 2) and 3)
+        if test -f ".shrug/.$branch/.index/$f" && test -f ".shrug/.$branch/$f"; then
+            index_and_repo=`diff ".shrug/.$branch/.index/$f" ".shrug/.$branch/$f" | wc -l`
+            current_and_index=`diff "$f" ".shrug/.$branch/.index/$f" | wc -l`
+            
+            ## Case 2)
+            if test $index_and_repo -gt 0 && test $current_and_index -eq 0; then
+                cp "$f" ".shrug/.$1/.files"
+                cp "$f" ".shrug/.$1/.index/"
+            fi
+            
+            ## Case 3)
+            if test $index_and_repo -ge 0 && test $current_and_index -gt 0; then
+                cp "$f" ".shrug/.$1/.files"
+                cp ".shrug/.$branch/.index/$f" ".shrug/.$1/.index/"
+            fi
+
+            ## Case 4)
+            if test $index_and_repo -eq 0 && test $current_and_index -eq 0; then
+                if test -f ".shrug/.$1/$f"; then
+                    cp ".shrug/.$1/$f" ".shrug/.$1/.files/"
+                    cp ".shrug/.$1/$f" ".shrug/.$1/.index/"
+                fi
+            fi
+        # else
+        #     ## Case 5)
+        #     # echo "hi 5"
+        #     cp "$f" ".shrug/.$1/.files/"
+            # cp "$f" ".shrug/.$1/.index/"
+        fi
+
     done
+
+    ## so now, we do our switch. f the directory of .files exists for
+    ## the branch we are switching to, we remove any files in the current directory
+    ## that don't belong to the branch we are going to, and otherwise we copy in all 
+    ## the files from the branch into the current working directory.
+
     if test -d ".shrug/.$1/.files"; then
-        files=`ls ".shrug/.$1/.files" | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt"`
+        files=`ls ".shrug/.$1/.files"`
         empty=`printf "$files\n" | tr '\n' ' ' | wc -l`
         for existing_file in $existing_files
         do
@@ -105,4 +151,4 @@ else
     fi
     sed -i '1s/.*/'$1/ ".shrug/branch.txt"
     echo "Switched to branch '$1'"
-fi
+fi      

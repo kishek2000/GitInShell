@@ -1,5 +1,15 @@
 #!/bin/dash
 
+########################################################################
+############################## SHRUG_RM ################################
+########################################################################
+
+## This file provides a way to remove files from the repo to different extents.
+## The logic is:
+## -> if a .shrug subdir exists, and files have been provided, then;
+##      -> in the comments below, the cases are explained.
+## -> otherwise, handle the errors.
+
 if ! test -d ".shrug"; then
     >&2 echo "shrug-branch: error: no .shrug directory containing shrug repository exists"
     exit 1
@@ -28,13 +38,15 @@ if test $# -ge 2; then
         >&2 echo "usage: shrug-branch [-d] <branch>"
         exit 1
     fi
-    
 fi
+
 if test "$1" = "-d"; then
     test "$2" = "master" && >&2 echo "shrug-branch: error: can not delete branch '$2'" && exit 1
     test "$2" = "$branch" && >&2 echo "shrug-branch: error: you are currently in this branch. Move to another to delete it." && exit 1
     ! test -d ".shrug/.$2" && >&2 echo "shrug-branch: error: branch '$2' does not exist" && exit 1
 
+    ## to delete a branch, we need to make sure there are no new changes present. If none, then we can recursively remove the
+    ## entire sub directory.
     for file in .shrug/.$2/.files/*
     do
         filename=`basename $file`
@@ -46,18 +58,20 @@ if test "$1" = "-d"; then
             exit 1
         fi
     done
-
     rm -r ".shrug/.$2" && echo "Deleted branch '$2'"
 elif test "$#" = "1"; then
     test -d ".shrug/.$1" && >&2 echo "shrug-branch: error: branch '$1' already exists" && exit 1
 
-    existing_files=`ls | tr ' ' '\n' | egrep -v "shrug-*" | egrep -v "diary.txt" | egrep -v "test*" | egrep -v "merge*"`
+    ## Overhere, we copy over all the necessary existing files into the new branch's .files subdir.
+    existing_files=`ls | tr ' ' '\n'`
     ! test -d ".shrug/.$branch/.files" && mkdir ".shrug/.$branch/.files"
     for f in $existing_files
     do
         cp "$f" ".shrug/.$branch/.files"
     done
     
+    ## Copy over all of the components now filtered in this branch, over to the new one and clean out the bin and
+    ## status files.
     cp -r ".shrug/.$branch" ".shrug/.$1"
     test -f ".shrug/.$1/.merged/*.*" && rm ".shrug/.$1/.merged/*.*"
     printf "" > ".shrug/.$1/.log/bin.txt"

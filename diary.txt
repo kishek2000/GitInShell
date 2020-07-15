@@ -86,3 +86,8 @@ DATE		START		END		    ACTIVITY		                COMMENTS
 15/07/2020  12:30pm     1:17pm      solving my test!                I solved my hard merge case! I understood that it was just about how I was 
                                                                     identifying conflicts, and now I think it's a lot more robust. Time to push it 
                                                                     all up again.
+""/""/""""  4:00pm      6:20pm      rewrote checkout, final         So I found some silly mistakes with checkout in some terminal tests, so I decided
+                                    styling, comments               to rewrite my code there and ended up making something a lot cleaner. I then continued
+                                                                    fixing some style, and adding comments - and have now pushed this version. I may try 
+                                                                    a couple things with shrug-show and add one of the tests I did in my checkout test script,
+                                                                    but only if I have time. This may be my last submission :).

@@ -1,20 +1,34 @@
 #!/bin/dash
 
+########################################################################
+############################# SHRUG_COMMIT #############################
+########################################################################
+
+## This file adds files provided, into the repo of the current branch.
+## The logic is:
+## -> if a .shrug subdir exists, then;
+##      -> the overall logic is to find all types of changes. This includes file commits, 
+##         deleted files, a call from merge asking to commit (meaning there may be nothing to
+##         commit but everything in the index should still be committed).
+##      -> If there was a deletion committed, we need to remove the file from the repo 
+##         to execute this change.
+## -> handle errors otherwise.
+
 if ! test -d ".shrug"; then
     >&2 echo "shrug-commit: error: no .shrug directory containing shrug repository exists"
-    exit
+    exit 1
 fi
 
 if test $# -lt 2 || test $# -gt 3;
 then
     >&2 echo "usage: shrug-commit [-a] -m commit-message"
-    exit
+    exit 1
 fi
 
 if test $# -eq 2 && test "$1" != "-a" && test "$1" != "-m";
 then
     >&2 echo "usage: shrug-commit [-a] -m commit-message"
-    exit
+    exit 1
 fi 
 
 branch=`cat ".shrug/branch.txt" | head -1`
@@ -22,6 +36,10 @@ FILES=".shrug/.$branch/.index/*"
 log=".shrug/.$branch/.log/log.txt"
 log_commits=".shrug/.$branch/.log/*"
 message="$2"
+
+
+## Here, we simply add and commit all files in the current index, that 
+## also exist in our current repo.
 
 if test $1 = "-a" && test $2 = "-m";
 then
@@ -37,35 +55,68 @@ then
     done
 fi
 
+## Here, we first find out whether the files in the index that have been staged,
+## are actually any different to their versions in the repository, if any exist.
+## The moment a difference is found, we have a change.
+
+## Also, if we don't have any commits of a file yet, then it is also counted as 
+## a change.
+
 if test $1 = "-m" || test $2 = "-m";
 then
-    ncommit=`cat ".shrug/branch.txt" | tail -1`
-    committed=0
+    num_commits=`cat ".shrug/branch.txt" | tail -1`
     changes=0
     for FILE in $FILES
     do
         latest_file_commit="-"
-        latestallcommit="-"
-        filename=`echo $FILE | sed 's/.shrug\/.*\/.index\///'`
+        latest_all_commit="-"
+        filename=`basename "$FILE"`
         test "$filename" = "*" && continue;
-        filecommits=`ls -l $log_commits | egrep "[0-9]*-$filename" | wc -l`
+        file_commits=`ls -l $log_commits | egrep "[0-9]*-$filename" | wc -l`
 
-        if test "$filecommits" -gt 0; then
-            latest_file_commit=`ls $log_commits | egrep "[0-9]*-$filename" | sed 's/.shrug\/.*\/.log\///' | cut -d '-' -f1 | sort -r | head -1`
-            latestallcommit=`ls $log_commits | egrep "[0-9]*-.*" | sed 's/.shrug\/.*\/.log\///' | cut -d '-' -f1 | sort -r | head -1`
-            if test "$latest_file_commit" = "$latestallcommit"; then
+        ## As aforementioned, if a file has never been committed, then it automatically
+        ## counts to our changes counter that determines if we have commits to make.
+        if test "$file_commits" -gt 0; then
+            latest_file_commit=`ls $log_commits | 
+            egrep "[0-9]*-$filename" | 
+            sed 's/.shrug\/.*\/.log\///' | 
+            cut -d '-' -f1 | 
+            sort -r | 
+            head -1`
+
+            latest_all_commit=`ls $log_commits | 
+            egrep "[0-9]*-.*" | 
+            sed 's/.shrug\/.*\/.log\///' | 
+            cut -d '-' -f1 | 
+            sort -r | 
+            head -1`
+            
+            ## Here, we check if the latest commit for our given file is the same as the 
+            ## latest commit for everything - because if so, then that's where we need to 
+            ## check if a file has different changes staged from the most recent commit.
+
+            if test "$latest_file_commit" = "$latest_all_commit"; then
                 difference=`diff "$FILE" ".shrug/.$branch/.log/$latest_file_commit-$filename" | wc -l`
                 changes=$(($changes + $difference))
             else
+                ## If the above two don't match, then we automatically know the file 
+                ## needs to be committed.
                 changes=1
             fi
         else
             changes=1
         fi
     done
-    file_deletion_commits=`cat ".shrug/.$branch/.log/bin.txt" | wc -l`
+    ## Over here, we now check for our deletions. 
+    ## The first number here will count all deletions.
+    num_deleted_files=`cat ".shrug/.$branch/.log/bin.txt" | wc -l`
     deletion_commits=0
     deleted_files=`cat ".shrug/.$branch/.log/bin.txt" | cut -d ' ' -f1`
+
+    ## The loop over here, counts any deletions that have been made and 
+    ## were never added from shrug-add - so in other words, they were manually
+    ## done with rm. In that case, we need to remove it from the branch and 
+    ## add to our changes counter.
 
     for REPOFILE in "$deleted_files"
     do
@@ -74,28 +125,39 @@ then
             deletion_commits=$(($deletion_commits + 1))
         fi
     done
+
+    ## Finally, if shrug-merge called commit then it will say t in this file.
+    ## This means even if we've had no changes up to now, we still need to commit.
+    ## A case where this can happen is in my test10.sh file, test number 5.
+
     merge_called=`cat ".shrug/.$branch/.merged/merge.txt"`
     test "$merge_called" = "t" && changes=$(($changes + 1))
-    changes=$(($file_deletion_commits + $changes + $deletion_commits))
+    changes=$(($num_deleted_files + $changes + $deletion_commits))
 
+    ## Finally now, we commit all files that are in our index, into the branch. The 
+    ## files are stored in the .log sub directory as well with the commit number 
+    ## and the filename. A dash is used to separate this because no matter the filename,
+    ## only the first dash will be cut and the second field will be used, in shrug-show.
     if test "$changes" -gt 0; then
         for FILE in $FILES
         do
-            filename=`echo $FILE | sed 's/.shrug\/.*\/.index\///'`
-            test "$filename" = "*" && touch ".shrug/.$branch/.log/$ncommit-" && continue;
+            filename=`basename $FILE`
+            test "$filename" = "*" && touch ".shrug/.$branch/.log/$num_commits-" && continue;
             cp "$FILE" ".shrug/.$branch/.log"
             cp "$FILE" ".shrug/.$branch/"
-            touch ".shrug/.$branch/.log/$ncommit-$filename"
-            mv ".shrug/.$branch/.log/$filename" ".shrug/.$branch/.log/$ncommit-$filename"
+            touch ".shrug/.$branch/.log/$num_commits-$filename"
+            mv ".shrug/.$branch/.log/$filename" ".shrug/.$branch/.log/$num_commits-$filename"
         done
-        echo "Committed as commit $ncommit"
-        echo "$ncommit $message" >> "$log"
-        ncommit=$(($ncommit + 1))
-        sed -i '2s/.*/'$ncommit/ ".shrug/branch.txt"
+        echo "Committed as commit $num_commits"
+        echo "$num_commits $message" >> "$log"
+        num_commits=$(($num_commits + 1))
+        ## So over here, we iterate our global commit number, and clear out the merge flag.
+        sed -i '2s/.*/'$num_commits/ ".shrug/branch.txt"
         printf "" > ".shrug/.$branch/.log/bin.txt"
         echo "f" > ".shrug/.$branch/.merged/merge.txt"
     else
-        test $committed -eq 0 && echo "nothing to commit"
+        ## If we didn't commit anything, then we echo that nothing was there to commit.
+        echo "nothing to commit"
     fi
 fi
 

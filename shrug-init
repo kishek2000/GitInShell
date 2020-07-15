@@ -1,12 +1,35 @@
 #!/bin/dash
 
+########################################################################
+############################## SHRUG_INIT ##############################
+########################################################################
+
+## This file initialises my interpretation of the shrug framework.
+## The logic is:
+## -> .shrug : the sub directory that contains everything.
+## -> .shrug/branch.txt : a txt file for the current branch, and the total 
+## commits over all branches.
+## -> .shrug/.master : each branch will have a sub directory.
+## -> .shrug/.master/.index : each branch will have an index sub directory.
+## -> .shrug/.master/.merged : each branch will have a merged sub directory,
+## which tells us what files have been merged in.
+## -> .shrug/.master/.merged/merge.txt : this will store whether commit was called by merge.
+## -> .shrug/.master/.log : each branch will have a log sub directory.
+## -> .shrug/.master/.log/log.txt : each branch will have a txt of commits.
+## -> .shrug/.master/.log/bin.txt : each branch will have a txt of deletions.
+## -> .shrug/.master/.log/status.txt : each branch will have a txt for shrug-status.
+
+## Some more explanantions about the usage and such will be provided throughout the
+## files where these different sections of the framework are most relevant.
+
 if test $# -gt 0; then
     >&2 echo "usage: shrug-init"
-    exit
+    exit 1
 fi
 
 if test -d ".shrug"; then
     >&2 echo "shrug-init: error: .shrug already exists"
+    exit 1
 else
     mkdir ".shrug"
     mkdir ".shrug/.master"
@@ -14,11 +37,11 @@ else
     mkdir ".shrug/.master/.log"
     mkdir ".shrug/.master/.merged/"
     touch ".shrug/branch.txt"
-    echo "master" > ".shrug/branch.txt"
-    echo 0 >> ".shrug/branch.txt"
-    echo f > ".shrug/.master/.merged/merge.txt"
     touch ".shrug/.master/.log/log.txt"
     touch ".shrug/.master/.log/bin.txt"
     touch ".shrug/.master/.log/status.txt"
+    echo "master" > ".shrug/branch.txt"
+    echo 0 >> ".shrug/branch.txt"
+    echo f > ".shrug/.master/.merged/merge.txt"
     echo "Initialized empty shrug repository in .shrug"
 fi

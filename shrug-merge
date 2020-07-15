@@ -1,5 +1,31 @@
 #!/bin/dash
 
+########################################################################
+############################# SHRUG_MERGE ##############################
+########################################################################
+
+## NOTE: THIS IS A VERY LONG FILE 
+
+## This file currently conducts the merging of two branches.
+## The logic is explained throughout in pieces. In a nutshell, besides error
+## handling from self-explanatory conditions, I first do a big loop to find
+## any conflicts and store them in a string, ready to be outputted to stderr.
+
+## From this loop, I also identify if instead, we have a potential fast forward
+## or 'already up to date' situation, and then if this is the case, I deal with this
+## in a different loop, and the 'copy_all' flag is the thing that is responsible to 
+## flag this.
+
+## Finally, if we don't have any conflicts or 'copy_all' needs, it is time to automerge
+## all files that exist in both branches. This process is also explained below, and I
+## determined my algorithm with some cases that I tried in a separate file that you can 
+## see in .merge_cases_working. If the file in the branch being merged in doesn't exist in
+## the current branch, it is automatically copied in.
+
+## That's the overall logic - I hope you enjoy reading my attempt :').
+
+
+## ERROR HANDLING (some of it)
 if ! test -d ".shrug"; then
     >&2 echo "shrug-merge: error: no .shrug directory containing shrug repository exists"
     exit 1
@@ -37,9 +63,10 @@ if ! test -d ".shrug/.$1"; then
     >&2 echo "shrug-merge: error: unknown branch '$1'"
     exit 1
 else
+    ## MAIN LOOP NO. 1 -> FOR CONFLICTS
     error="false"
     errorfiles=""
-    copyall="false"
+    copy_all="false"
 
     for file in .shrug/.$1/.files/*
     do  
@@ -50,8 +77,11 @@ else
             latest_current_version=`ls ".shrug/.$branch/.log" | egrep "$filename" | egrep -v "(status|bin|log).txt" | cut -d '-' -f1 | sort | tail -1`
 
             ## what we need to do here is ensure that we don't work with any untracked, uncommitted files:
-            test "$latest_branch_version" = "" && test "$latest_current_version" = "" && copyall="true" && continue
+            test "$latest_branch_version" = "" && test "$latest_current_version" = "" && copy_all="true" && continue
 
+
+            ## now, we can find the latest common commit from both the current branch, and the branch that needs to
+            ## be merged into the current branch.
             branch_versions=`ls ".shrug/.$1/.log" | egrep "$filename" | egrep -v "(status|bin|log).txt" | cut -d '-' -f1`
             current_versions=`ls ".shrug/.$branch/.log" | egrep "$filename" | egrep -v "(status|bin|log).txt" | cut -d '-' -f1`
 
@@ -83,17 +113,17 @@ else
                 changes_branch=`diff "$latest_common_commit" ".shrug/.$1/.log/$latest_branch_version-$filename" |
                 egrep -v "(status|bin|log).txt" | 
                 egrep "[0-9][cad][0-9]"`
-                # cut -d ' ' -f1`
+
                 changes_current=`diff "$latest_common_commit" ".shrug/.$branch/.log/$latest_current_version-$filename" |
                 egrep -v "(status|bin|log).txt" | 
                 egrep "[0-9][cad][0-9]"`
 
                 num_changes_branch=`echo "$changes_branch" | wc -l`
                 num_changes_current=`echo "$changes_current" | wc -l`
+
                 ## in this method of checking for a conflict, we need to be wary of one thing - if the two diffs recommend
                 ## changing something on the same line, except the change they recommend is also identical, then it's not
                 ## a conflict!
-
                 test $num_changes_branch -le $num_changes_current && outer_loop="$changes_branch" && inner_loop="$changes_current" &&
                 outer_file=".shrug/.$1/.log/$latest_branch_version-$filename" && 
                 inner_file=".shrug/.$branch/.log/$latest_current_version-$filename"
@@ -101,7 +131,9 @@ else
                 test $num_changes_branch -gt $num_changes_current && outer_loop="$changes_current" && inner_loop="$changes_branch" && 
                 outer_file=".shrug/.$branch/.log/$latest_current_version-$filename" && 
                 inner_file=".shrug/.$1/.log/$latest_branch_version-$filename"
-                ## to armour against this, we can compare the destination line offered by the diff between both files.
+                
+                ## to armour against this, we can compare the destination line offered by the diff between both files. but first, 
+                ## let's find some potential conflicts.
                 for outer_changes in $outer_loop
                 do
                     outer_src=`echo $outer_changes | sed 's/[acd]/ /g' | cut -d ' ' -f1`
@@ -172,12 +204,14 @@ else
                     done
                 done
             else
-                copyall="true"
+                copy_all="true"
             fi
         fi
     done
     
-    
+
+    ## MAIN LOOP NO. 1.1 -> FROM ERROR FLAG
+    ## if we flagged that there is an error, we output the files that have conflicts and exit.
     if test "$error" = "true"; then
         >&2 echo "shrug-merge: error: These files can not be merged:"
         for nomerge in $errorfiles
@@ -187,7 +221,8 @@ else
         exit 1
     fi
 
-    if test "$error" = "false" && test "$copyall" = "true"; then
+    ## MAIN LOOP NO. 2 -> FAST FORWARD OR ALREADY UP TO DATE, OR ALSO LOCAL CHANGE ERROR
+    if test "$error" = "false" && test "$copy_all" = "true"; then
         ## to check if we fast forward, or are already up to date, we diff the currdir file 
         ## with the branch file.
         fast_forward="false"
@@ -216,7 +251,10 @@ else
             if test $fast_forward="true"; then
                 index_and_curr=0
                 index_and_repo=0
-                
+                ## now over here, we are checking that if we need to fast forward, ensure that
+                ## there are no local changes present. If so, throw an error - otherwise, we can
+                ## copy everything necessary.
+
                 test -f ".shrug/.$branch/.index/$filename" &&
                 index_and_curr=`diff "$filename" ".shrug/.$branch/.index/$filename" | wc -l`
                 
@@ -267,8 +305,9 @@ else
         cat ".shrug/.$1/.log/log.txt" >> ".shrug/.$branch/.log/log.txt" && exit 0
     fi
 
+    ## MAIN LOOP NO. 3 -> AUTO MERGING!!!
     committed=0
-    test "$error" = "false" && test "$copyall" = "false" &&
+    test "$error" = "false" && test "$copy_all" = "false" &&
     for file in .shrug/.$1/.files/*
     do
         filename=`basename $file`
@@ -385,6 +424,8 @@ else
                 dest=`echo $dest | tr ',' '\n' | sort -r`
                 for line_num in $src
                 do
+                    ## sometimes, our line that we want to add may just be a single line. However, if it is multi lined, then
+                    ## we need to loop through the line instead.
                     lines_in_addition=`echo "$destline" | wc -l`
                     if test $lines_in_addition -eq 1; then
                         test $line_num -le $total && test $line_num -eq 0 && sed -i '1 i'\\"$destline" $filename
@@ -404,6 +445,7 @@ else
             committed=$(( $committed + 1 ))
             cp "$file" ".shrug/.$branch/.merged"
         else
+            ## here we copy the file in all necessary places, if it is a new file as interpreted by the current branch.
             cp "$file" ./
             cp "$file" ".shrug/.$branch/"
             cp "$file" ".shrug/.$branch/.index/"
@@ -415,6 +457,8 @@ else
             done
         fi
     done
+
+    ## FINAL: COMMIT CHANGES AND FLAG TO SHRUG-COMMIT THAT MERGE CALLED IT USING THE merge.txt FILE
     test $committed -gt 0 && echo "t" > ".shrug/.$branch/.merged/merge.txt" &&
     sh shrug-commit -a -m "$3" && 
     cat ".shrug/.$1/.log/log.txt" >> ".shrug/.$branch/.log/log.txt"

@@ -1,5 +1,23 @@
 #!/bin/dash
 
+########################################################################
+############################## SHRUG_RM ################################
+########################################################################
+
+## This file provides a way to remove files from the repo to different extents.
+## The logic is:
+## -> if a .shrug subdir exists, and files have been provided, then;
+##      -> if force is provided, don't even think twice - just remove the necessary files.
+##      -> if force cache is provided, don't even think twice - just remove the necessary index files.
+##      -> if just cache is provided, handle errors as needed and output the "file - unstaged" line.
+##         if index file is deleted, just so that we can track it as a change and a commit. This is
+##         referenced in the shrug-commit comments.
+##      -> if just a file is given, we need to ensure that it doesn't have any conflicting changes.
+##         these conditions are shown at bottom. If all good, we then remove it from the index and 
+##         currdir, and then we output "file - deleted" into our bin.txt, for use in shrug-status
+##         and also our commit tracking.
+## -> otherwise, handle the errors.
+
 if ! test -d ".shrug"; then
     >&2 echo "shrug-rm: error: no .shrug directory containing shrug repository exists"
     exit 1
@@ -28,12 +46,14 @@ elif test "$1" = "--cached"; then
     cached=1
 fi
 
-# echo "force = $force, cached = $cached and args are:"
 files=`echo $@ | sed 's/--cached//' | sed 's/--force//'`
 
 for f in $files
 do
-    ! test -f "$index/$f" && >&2 echo "shrug-rm: error: '$f' is not in the shrug repository" && exit 1
+    if ! test -f "$index/$f"; then
+        >&2 echo "shrug-rm: error: '$f' is not in the shrug repository"
+        exit 1
+    fi
 done
 
 if test $force -eq 1; then
@@ -77,6 +97,8 @@ else
                 rm "$index/$file"
                 echo "$file - unstaged" >> ".shrug/.$branch/.log/bin.txt"
             elif test $compare_repo_dir -eq 0; then
+                ## we require to check that the file is in fact in the index here, because sometimes they can be unstaged
+                ## and then called to be removed again without cache.
                 test -f "$index/$file" && rm "$index/$file"
                 rm "$file"
                 echo "$file - deleted" >> ".shrug/.$branch/.log/bin.txt"

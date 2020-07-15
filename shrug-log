@@ -1,5 +1,16 @@
 #!/bin/dash
 
+########################################################################
+############################## SHRUG_LOG ###############################
+########################################################################
+
+## This file shows the commit log for the entire .shrug subdir.
+## The logic is:
+## -> if a .shrug subdir exists, and files have been provided, then;
+##      -> with the setup I've used from the outset, log is quite an easy output.
+##         simply just output the log.txt file for the branch and done :D
+## -> otherwise, handle the errors.
+
 if ! test -d ".shrug"; then
     >&2 echo "shrug-log: error: no .shrug directory containing shrug repository exists"
     exit 1

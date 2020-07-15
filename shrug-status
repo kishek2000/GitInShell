@@ -1,5 +1,21 @@
 #!/bin/dash
 
+########################################################################
+############################# SHRUG_STATUS #############################
+########################################################################
+
+## This file adds files provided, into the repo of the current branch.
+## The logic is:
+## -> if a .shrug subdir exists, then;
+##      -> the overall logic is quite simple. Handle errors accordingly, and otherwise
+##         go through the files in the current directory and make 2 key comparisons:
+##              1) difference between current directory file and its counterpart in index (if it exists)
+##              2) difference between that file in index and its counterpart in repo (if it exists)
+##         With these, it is demonstrated below with clear variable names about how these cases create the 
+##         different outputs. Each output is appended to a file, alongside the bin.txt file, and this is sorted
+##         and outputted in the end with cat.
+## -> handle errors otherwise.
+
 if ! test -d ".shrug"; then
     >&2 echo "shrug-status: error: no .shrug directory containing shrug repository exists"
     exit 1
@@ -21,29 +37,30 @@ if test $# -gt 0; then
     exit 1
 fi
 
-
 printf "" > ".shrug/.$branch/.log/status.txt"
 
+## Handling deleted files first
 for file in $repo
 do
-    deletedfile=`echo $file | sed 's/.shrug\/.*\///'`
-    test "$deletedfile" = "*" && continue;
-    if ! test -f "$deletedfile"; then
-        inbin=`cat ".shrug/.$branch/.log/bin.txt" | egrep "$deletedfile - .*deleted" | wc -l`
-        test $inbin -eq 0 && echo "$deletedfile - file deleted" >> ".shrug/.$branch/.log/bin.txt"
+    deleted_file=`echo $file | sed 's/.shrug\/.*\///'`
+    test "$deleted_file" = "*" && continue;
+    if ! test -f "$deleted_file"; then
+        inbin=`cat ".shrug/.$branch/.log/bin.txt" | egrep "$deleted_file - .*deleted" | wc -l`
+        test $inbin -eq 0 && echo "$deleted_file - file deleted" >> ".shrug/.$branch/.log/bin.txt"
     fi
 done
 
 for file in "$index/*"
 do
-    deletedfile=`echo $file | sed 's/.shrug\/.*\///'`
-    test "$deletedfile" = "*" && continue;
-    if ! test -f "$deletedfile"; then
-        inbin=`cat ".shrug/.$branch/.log/bin.txt" | egrep "$deletedfile - .*deleted" | wc -l`
-        test $inbin -eq 0 && echo "$deletedfile - added to index, file deleted" >> ".shrug/.$branch/.log/bin.txt"
+    deleted_file=`echo $file | sed 's/.shrug\/.*\///'`
+    test "$deleted_file" = "*" && continue;
+    if ! test -f "$deleted_file"; then
+        inbin=`cat ".shrug/.$branch/.log/bin.txt" | egrep "$deleted_file - .*deleted" | wc -l`
+        test $inbin -eq 0 && echo "$deleted_file - added to index, file deleted" >> ".shrug/.$branch/.log/bin.txt"
     fi
 done
 
+## Rest of files
 for file in *
 do
     filename=`echo $file`
@@ -52,6 +69,7 @@ do
         compare_dir=`diff "$index/$filename" "$file" | wc -l`
         if test -f ".shrug/.$branch/$filename"; then # this is where a file is committed
             compare_repo=`diff ".shrug/.$branch/$filename" "$index/$filename" | wc -l`
+            ## so now with the use of the two comparisons, we can determine the cases below.
             test $compare_repo -eq 0 &&
             ! test $compare_dir -gt 0 &&
             echo "$filename - same as repo" >> ".shrug/.$branch/.log/status.txt"
@@ -69,6 +87,7 @@ do
             echo "$filename - file changed, changes not staged for commit" >> ".shrug/.$branch/.log/status.txt"
             
         else
+            ## if the file doesn't exist in the branch, then we have these cases of additions to the index
             test $compare_dir -eq 0 &&
             echo "$filename - added to index" >> ".shrug/.$branch/.log/status.txt"
             
@@ -80,6 +99,10 @@ do
         echo "$filename - untracked" >> ".shrug/.$branch/.log/status.txt"
     fi
 done
+
+## The lines that contain "unstaged" are just for checking that something has been removed with cache, and this
+## should be tracked as a commit. So, this is found in the bin.txt file by shrug-rm but this is not a required
+## output in shrug-status - hence it is excluded. Also any empty directory cases are excluded too.
 
 cat ".shrug/.$branch/.log/bin.txt" | egrep -v "unstaged" | egrep -v "\*" >> ".shrug/.$branch/.log/status.txt"
 cat ".shrug/.$branch/.log/status.txt" | sort

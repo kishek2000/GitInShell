@@ -1,6 +1,6 @@
 #!/bin/dash
 
-#### TESTS FOR SHRUG-LOG ####
+#### TESTS FOR SHRUG-SHOW ####
 
 ## The process I've taken here, is to first do the error checks,
 ## and then do some weirder situations. This will be for all the test
@@ -19,7 +19,7 @@ FAIL='\033[0;31m'
 NC='\033[0m'
 
 echo
-echo "=========== Testing shrug-log... ============"
+echo "=========== Testing shrug-show... ==========="
 echo
 
 ##
@@ -28,29 +28,29 @@ echo
 
 # === my file === #
 rm -rf .shrug
-./shrug-log a b c d e f g 2> log_t1_1
-./shrug-log 2> log_t1_2
+./shrug-show a b c d e f g 2> show_t1_1
+./shrug-show 2> show_t1_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-log a b c d e f g 2> log_t1_1a
-2041 shrug-log 2> log_t1_2a
+2041 shrug-show a b c d e f g 2> show_t1_1a
+2041 shrug-show 2> show_t1_2a
 
 count=1
 while test $count -le 2
 do
     printf "."
-    passed=`diff "log_t1_$count" "log_t1_$count"a | wc -l`
+    passed=`diff "show_t1_$count" "show_t1_$count"a | wc -l`
     if test $passed -gt 0; then
         printf " ${FAIL}Test 1 (no repo) --- failed${NC}\n"
         echo "difference below:"
-        diff "log_t1_$count" "log_t1_$count"a
+        diff "show_t1_$count" "show_t1_$count"a
         exit
     fi
     count=$(($count + 1))
 done
 printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
-rm log_t1*
+rm show_t1*
 
 ##
 ## Test 02 - no commits
@@ -58,31 +58,31 @@ rm log_t1*
 
 # === my file === #
 rm -rf .shrug
-./shrug-init > log_tmp
-./shrug-log a b c d e f g 2> log_t2_1
-./shrug-log 2> log_t2_2
+./shrug-init > show_tmp
+./shrug-show a b c d e f g 2> show_t2_1
+./shrug-show 2> show_t2_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-init > log_tmp
-2041 shrug-log a b c d e f g 2> log_t2_1a
-2041 shrug-log 2> log_t2_2a
+2041 shrug-init > show_tmp
+2041 shrug-show a b c d e f g 2> show_t2_1a
+2041 shrug-show 2> show_t2_2a
 
 count=1
 while test $count -le 2
 do
     printf "."
-    passed=`diff "log_t2_$count" "log_t2_$count"a | wc -l`
+    passed=`diff "show_t2_$count" "show_t2_$count"a | wc -l`
     if test $passed -gt 0; then
         printf " ${FAIL}Test 2 (no commits) --- failed${NC}\n"
         echo "difference below:"
-        diff "log_t2_$count" "log_t2_$count"a
+        diff "show_t2_$count" "show_t2_$count"a
         exit
     fi
     count=$(($count + 1))
 done
 printf "\n${PASS}Test 2 (no commits) ---> passed!${NC}\n"
-rm log_t2*
+rm show_t2*
 
 ##
 ## Test 03 - cmd args
@@ -90,36 +90,128 @@ rm log_t2*
 
 # === my file === #
 rm -rf .shrug
-./shrug-init > log_tmp
-echo hello_world > log_tmpfile_t2
-./shrug-add log_tmpfile_t2
-./shrug-commit -m "commit-0" > log_tmp
-./shrug-log a b c d e f g 2> log_t2_1
-./shrug-log x-5ufjfa._ 2> log_t2_2
+./shrug-init > show_tmp
+echo hello_world > show_tmpfile_t3
+./shrug-add show_tmpfile_t3
+./shrug-commit -m "commit-0" > show_tmp
+./shrug-show a b c d e f g 2> show_t3_1
+./shrug-show x-5ufjfa._ 2> show_t3_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-init > log_tmp
-echo hello_world > log_tmpfile_t2
-2041 shrug-add log_tmpfile_t2
-2041 shrug-commit -m "commit-0" > log_tmp
-2041 shrug-log a b c d e f g 2> log_t2_1a
-2041 shrug-log x-5ufjfa._ 2> log_t2_2a
+2041 shrug-init > show_tmp
+echo hello_world > show_tmpfile_t3
+2041 shrug-add show_tmpfile_t3
+2041 shrug-commit -m "commit-0" > show_tmp
+2041 shrug-show a b c d e f g 2> show_t3_1a
+2041 shrug-show x-5ufjfa._ 2> show_t3_2a
 
 count=1
 while test $count -le 2
 do
     printf "."
-    passed=`diff "log_t2_$count" "log_t2_$count"a | wc -l`
+    passed=`diff "show_t3_$count" "show_t3_$count"a | wc -l`
     if test $passed -gt 0; then
         printf " ${FAIL}Test 3 (cmd args) --- failed${NC}\n"
         echo "difference below:"
-        diff "log_t2_$count" "log_t2_$count"a
+        diff "show_t3_$count" "show_t3_$count"a
         exit
     fi
     count=$(($count + 1))
 done
 printf "\n${PASS}Test 3 (cmd args) ---> passed!${NC}\n"
-rm log_t2*
+rm show_t3*
 
-rm log_*
+##
+## Test 04 - committed file
+##
+
+# === my file === #
+rm -rf .shrug
+./shrug-init > show_tmp
+echo hello_world > show_tmpfile_t4
+./shrug-add show_tmpfile_t4
+./shrug-commit -m "commit-0" > show_tmp
+echo "hello there" > show_tmpfile_t4
+./shrug-show :a 2> show_t4_1 > show_t4_1
+cat show_tmpfile_t4 > show_t4_2
+
+# === reference === #
+rm -rf .shrug
+2041 shrug-init > show_tmp
+echo hello_world > show_tmpfile_t4
+2041 shrug-add show_tmpfile_t4
+2041 shrug-commit -m "commit-0" > show_tmp
+echo "hello there" > show_tmpfile_t4
+2041 shrug-show :a 2> show_t4_1a > show_t4_1a
+cat show_tmpfile_t4 > show_t4_2a
+
+count=1
+while test $count -le 2
+do
+    printf "."
+    passed=`diff "show_t4_$count" "show_t4_$count"a | wc -l`
+    if test $passed -gt 0; then
+        printf " ${FAIL}Test 4 (committed file) --- failed${NC}\n"
+        echo "difference below:"
+        diff "show_t4_$count" "show_t4_$count"a
+        exit
+    fi
+    count=$(($count + 1))
+done
+printf "\n${PASS}Test 4 (committed file) ---> passed!${NC}\n"
+rm show_t4*
+
+##
+## Test 05 - file from diff branch
+##
+
+# === my file === #
+rm -rf .shrug
+2041 shrug-init > show_tmp
+echo hello > show_tmp_file
+2041 shrug-add show_tmp_file
+2041 shrug-commit -m a > show_tmp 
+2041 shrug-branch b1 > show_tmp
+2041 shrug-checkout b1 > show_tmp
+echo hi > b
+2041 shrug-add b 
+2041 shrug-commit -m c > show_tmp
+2041 shrug-checkout master > show_tmp
+2041 shrug-show :b 2> show_t5_1 > show_t5_1
+2041 shrug-show 1:b 2> show_t5_2 > show_t5_2
+2041 shrug-show 0:b 2> show_t5_3 > show_t5_3
+
+# === reference === #
+rm -rf .shrug
+2041 shrug-init > show_tmp
+echo hello > show_tmp_file
+2041 shrug-add show_tmp_file
+2041 shrug-commit -m a > show_tmp 
+2041 shrug-branch b1 > show_tmp
+2041 shrug-checkout b1 > show_tmp
+echo hi > b
+2041 shrug-add b 
+2041 shrug-commit -m c > show_tmp
+2041 shrug-checkout master > show_tmp
+2041 shrug-show :b 2> show_t5_1a > show_t5_1a
+2041 shrug-show 1:b 2> show_t5_2a > show_t5_2a
+2041 shrug-show 0:b 2> show_t5_3a > show_t5_3a
+
+count=1
+while test $count -le 3
+do
+    printf "."
+    passed=`diff "show_t5_$count" "show_t5_$count"a | wc -l`
+    if test $passed -gt 0; then
+        printf " ${FAIL}Test 5 (file from diff branch) --- failed${NC}\n"
+        echo "difference below:"
+        diff "show_t5_$count" "show_t5_$count"a
+        exit
+    fi
+    count=$(($count + 1))
+done
+printf "\n${PASS}Test 5 (file from diff branch) ---> passed!${NC}\n"
+rm show_t5*
+
+rm show_*

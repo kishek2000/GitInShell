@@ -1,6 +1,6 @@
 #!/bin/dash
 
-#### TESTS FOR SHRUG-STATUS ####
+#### TESTS FOR SHRUG-BRANCH ####
 
 ## The process I've taken here, is to first do the error checks,
 ## and then do some weirder situations. This will be for all the test
@@ -19,7 +19,7 @@ FAIL='\033[0;31m'
 NC='\033[0m'
 
 echo
-echo "========== Testing shrug-status... =========="
+echo "========== Testing shrug-branch... =========="
 echo
 
 ##
@@ -28,29 +28,29 @@ echo
 
 # === my file === #
 rm -rf .shrug
-./shrug-status a b c d e f g 2> status_t1_1
-./shrug-status 2> status_t1_2
+./shrug-branch a b c d e f g 2> branch_t1_1
+./shrug-branch 2> branch_t1_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-status a b c d e f g 2> status_t1_1a
-2041 shrug-status 2> status_t1_2a
+2041 shrug-branch a b c d e f g 2> branch_t1_1a
+2041 shrug-branch 2> branch_t1_2a
 
 count=1
 while test $count -le 2
 do
     printf "."
-    passed=`diff "status_t1_$count" "status_t1_$count"a | wc -l`
+    passed=`diff "branch_t1_$count" "branch_t1_$count"a | wc -l`
     if test $passed -gt 0; then
         printf " ${FAIL}Test 1 (no repo) --- failed${NC}\n"
         echo "difference below:"
-        diff "status_t1_$count" "status_t1_$count"a
+        diff "branch_t1_$count" "branch_t1_$count"a
         exit
     fi
     count=$(($count + 1))
 done
 printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
-rm status_t1*
+rm branch_t1*
 
 ##
 ## Test 02 - no commits
@@ -58,31 +58,31 @@ rm status_t1*
 
 # === my file === #
 rm -rf .shrug
-./shrug-init > status_tmp
-./shrug-status a b c d e f g 2> status_t2_1
-./shrug-status 2> status_t2_2
+./shrug-init > branch_tmp
+./shrug-branch a b c d e f g 2> branch_t2_1
+./shrug-branch 2> branch_t2_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-init > status_tmp
-2041 shrug-status a b c d e f g 2> status_t2_1a
-2041 shrug-status 2> status_t2_2a
+2041 shrug-init > branch_tmp
+2041 shrug-branch a b c d e f g 2> branch_t2_1a
+2041 shrug-branch 2> branch_t2_2a
 
 count=1
 while test $count -le 2
 do
     printf "."
-    passed=`diff "status_t2_$count" "status_t2_$count"a | wc -l`
+    passed=`diff "branch_t2_$count" "branch_t2_$count"a | wc -l`
     if test $passed -gt 0; then
         printf " ${FAIL}Test 2 (no commits) --- failed${NC}\n"
         echo "difference below:"
-        diff "status_t2_$count" "status_t2_$count"a
+        diff "branch_t2_$count" "branch_t2_$count"a
         exit
     fi
     count=$(($count + 1))
 done
 printf "\n${PASS}Test 2 (no commits) ---> passed!${NC}\n"
-rm status_t2*
+rm branch_t2*
 
 ##
 ## Test 03 - cmd args
@@ -90,91 +90,116 @@ rm status_t2*
 
 # === my file === #
 rm -rf .shrug
-./shrug-init > status_tmp
-echo hello_world > status_tmpfile_t3
-./shrug-add status_tmpfile_t3
-./shrug-commit -m "commit-0" > status_tmp
-./shrug-status a b c d e f g 2> status_t3_1
-./shrug-status x-5ufjfa._ 2> status_t3_2
+./shrug-init > branch_tmp
+echo hello_world > branch_tmpfile_t3
+./shrug-add branch_tmpfile_t3
+./shrug-commit -m "commit-0" > branch_tmp
+./shrug-branch a b c d e f g 2> branch_t3_1
+./shrug-branch x-5ufjfa_ 2> branch_t3_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-init > status_tmp
-echo hello_world > status_tmpfile_t3
-2041 shrug-add status_tmpfile_t3
-2041 shrug-commit -m "commit-0" > status_tmp
-echo "usage: shrug-status" > status_t3_1a
-echo "usage: shrug-status" > status_t3_2a
+2041 shrug-init > branch_tmp
+echo hello_world > branch_tmpfile_t3
+2041 shrug-add branch_tmpfile_t3
+2041 shrug-commit -m "commit-0" > branch_tmp
+2041 shrug-branch a b c d e f g 2> branch_t3_1a
+2041 shrug-branch x-5ufjfa_ 2> branch_t3_2a
 
 count=1
 while test $count -le 2
 do
     printf "."
-    passed=`diff "status_t3_$count" "status_t3_$count"a | wc -l`
+    passed=`diff "branch_t3_$count" "branch_t3_$count"a | wc -l`
     if test $passed -gt 0; then
         printf " ${FAIL}Test 3 (cmd args) --- failed${NC}\n"
         echo "difference below:"
-        diff "status_t3_$count" "status_t3_$count"a
+        diff "branch_t3_$count" "branch_t3_$count"a
         exit
     fi
     count=$(($count + 1))
 done
 printf "\n${PASS}Test 3 (cmd args) ---> passed!${NC}\n"
-rm status_t3*
+rm branch_t3*
 
 ##
-## Test 04 - variety of files
+## Test 04 - form a branch
 ##
 
 # === my file === #
 rm -rf .shrug
-./shrug-init > status_tmp
-echo "hello world" > status_tmpfile_1_t4
-echo "hello there" > status_tmpfile_2_t4
-echo "goodbye" > status_tmpfile_3_t4
-./shrug-add status_tmpfile_1_t4 status_tmpfile_2_t4
-echo "adding change after commit" >> status_tmpfile_2_t4
-./shrug-commit -m "commit-0" > status_tmp
-./shrug-status | egrep -v "status*" 2> status_t4_1 > status_t4_1
+./shrug-init > branch_tmp
+echo hello_world > branch_tmpfile_t4
+./shrug-add branch_tmpfile_t4
+./shrug-commit -m "commit-0" > branch_tmp
+echo "hello there" > branch_tmpfile_t4
+./shrug-branch a 2> branch_t4_1 > branch_t4_1
+./shrug-branch > branch_t4_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-init > status_tmp
-echo "hello world" > status_tmpfile_1_t4a
-echo "hello there" > status_tmpfile_2_t4a
-echo "goodbye" > status_tmpfile_3_t4a
-2041 shrug-add status_tmpfile_1_t4a status_tmpfile_2_t4a
-echo "adding change after commit" >> status_tmpfile_2_t4a
-2041 shrug-commit -m "commit-0" > status_tmp
-2041 shrug-status | egrep -v "status*" 2> status_t4_1a > status_t4_1a
+2041 shrug-init > branch_tmp
+echo hello_world > branch_tmpfile_t4
+2041 shrug-add branch_tmpfile_t4
+2041 shrug-commit -m "commit-0" > branch_tmp
+echo "hello there" > branch_tmpfile_t4
+2041 shrug-branch a 2> branch_t4_1a > branch_t4_1a
+2041 shrug-branch > branch_t4_2a
 
 count=1
-while test $count -le 1
+while test $count -le 2
 do
     printf "."
-    passed=`diff "status_t4_$count" "status_t4_$count"a | wc -l`
-    file_comparisons=1
-    while test $file_comparisons -le 3; 
-    do
-        printf "."
-        same=`diff "status_tmpfile_$file_comparisons"_t4 "status_tmpfile_$file_comparisons"_t4 | wc -l`
-        if test $same -gt 0; then
-            printf " ${FAIL}Test 4 (variety of files) --- different file contents present:${NC}\n"
-            diff "status_tmpfile_$file_comparisons"_t4 "status_tmpfile_$file_comparisons"_t4
-            exit
-        fi
-        file_comparisons=$(($file_comparisons + 1))
-    done
+    passed=`diff "branch_t4_$count" "branch_t4_$count"a | wc -l`
     if test $passed -gt 0; then
-        printf " ${FAIL}Test 4 (variety of files) --- failed${NC}\n"
+        printf " ${FAIL}Test 4 (form a branch) --- failed${NC}\n"
         echo "difference below:"
-        diff "status_t4_$count" "status_t4_$count"a
+        diff "branch_t4_$count" "branch_t4_$count"a
         exit
     fi
     count=$(($count + 1))
 done
-printf "\n${PASS}Test 4 (variety of files) ---> passed!${NC}\n"
-rm status_t4*
+printf "\n${PASS}Test 4 (form a branch) ---> passed!${NC}\n"
+rm branch_t4*
+rm branch_*
 
+##
+## Test 05 - incorrect deletions
+##
 
-rm status_*
+# === my file === #
+rm -rf .shrug
+./shrug-init > branch_tmp
+echo hello_world > branch_tmpfile_t4
+./shrug-add branch_tmpfile_t4
+./shrug-commit -m "commit-0" > branch_tmp
+./shrug-branch -d "a" 2> branch_t4_1 > branch_t4_1
+./shrug-branch -d "master" 2> branch_t4_2 > branch_t4_2
+./shrug-branch > branch_t4_2
+
+# === reference === #
+rm -rf .shrug
+2041 shrug-init > branch_tmp
+echo hello_world > branch_tmpfile_t4
+2041 shrug-add branch_tmpfile_t4
+2041 shrug-commit -m "commit-0" > branch_tmp
+2041 shrug-branch -d "a" 2> branch_t4_1a > branch_t4_1a
+2041 shrug-branch -d "master" 2> branch_t4_2a > branch_t4_2a
+2041 shrug-branch > branch_t4_2a
+
+count=1
+while test $count -le 2
+do
+    printf "."
+    passed=`diff "branch_t4_$count" "branch_t4_$count"a | wc -l`
+    if test $passed -gt 0; then
+        printf " ${FAIL}Test 5 (incorrect deletions) --- failed${NC}\n"
+        echo "difference below:"
+        diff "branch_t4_$count" "branch_t4_$count"a
+        exit
+    fi
+    count=$(($count + 1))
+done
+printf "\n${PASS}Test 5 (incorrect deletions) ---> passed!${NC}\n"
+rm branch_t4*
+rm branch_*

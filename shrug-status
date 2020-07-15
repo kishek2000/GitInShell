@@ -42,7 +42,7 @@ printf "" > ".shrug/.$branch/.log/status.txt"
 ## Handling deleted files first
 for file in $repo
 do
-    deleted_file=`echo $file | sed 's/.shrug\/.*\///'`
+    deleted_file=`basename $file`
     test "$deleted_file" = "*" && continue;
     if ! test -f "$deleted_file"; then
         inbin=`cat ".shrug/.$branch/.log/bin.txt" | egrep "$deleted_file - .*deleted" | wc -l`
@@ -50,9 +50,9 @@ do
     fi
 done
 
-for file in "$index/*"
+for file in $index/*
 do
-    deleted_file=`echo $file | sed 's/.shrug\/.*\///'`
+    deleted_file=`basename $file`
     test "$deleted_file" = "*" && continue;
     if ! test -f "$deleted_file"; then
         inbin=`cat ".shrug/.$branch/.log/bin.txt" | egrep "$deleted_file - .*deleted" | wc -l`

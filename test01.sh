@@ -1,6 +1,6 @@
 #!/bin/dash
 
-#### TESTS FOR SHRUG-INIT ####
+#### TESTS FOR SHRUG-ADD ####
 
 ## The process I've taken here, is to first do the error checks,
 ## and then do some weirder situations. This will be for all the test
@@ -19,71 +19,101 @@ FAIL='\033[0;31m'
 NC='\033[0m'
 
 echo
-echo "=========== Testing shrug-init... ==========="
+echo "============ Testing shrug-add... ==========="
 echo
 
 ##
-## Test 01 - command line args provided
+## Test 01 - no shrug repo present
 ##
 
 # === my file === #
 rm -rf .shrug
-./shrug-init a b c d e f g 2> init_t1_1
-./shrug-init a b c 2> init_t1_2
-./shrug-init \/0-a a-a d-a 2> init_t1_3
+./shrug-add a b c d e f g 2> add_t1_1
+./shrug-add 2> add_t1_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-init a b c d e f g 2> init_t1_1a
-2041 shrug-init a b c 2> init_t1_2a
-2041 shrug-init \/0-a a-a d-a 2> init_t1_3a
+2041 shrug-add a b c d e f g 2> add_t1_1a
+2041 shrug-add 2> add_t1_2a
 
 count=1
-while test $count -le 3
+while test $count -le 2
 do
     printf "."
-    passed=`diff "init_t1_$count" "init_t1_$count"a | wc -l`
+    passed=`diff "add_t1_$count" "add_t1_$count"a | wc -l`
     if test $passed -gt 0; then
-        printf "${FAIL}Test 1 (command line args) --- failed${NC}\n"
+        printf "${FAIL}Test 1 (no repo) --- failed${NC}\n"
         echo "difference below:"
-        diff "init_t1_$count" "init_t1_$count"a
+        diff "add_t1_$count" "add_t1_$count"a
         exit
     fi
     count=$(($count + 1))
 done
-printf "\n${PASS}Test 1 (command line args) ---> passed!${NC}\n"
-rm init_t1*
+printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
+rm add_t1*
 
 ##
-## Test 02 - shrug already exists
+## Test 02 - nonexistent files
 ##
 
 # === my file === #
 rm -rf .shrug
-./shrug-init > init_t2_1 2> init_t2_1
-./shrug-init > init_t2_2 2> init_t2_2
-./shrug-init askljfha fsdf > init_t2_3 2> init_t2_3
+./shrug-init > add_tmp
+./shrug-add a > add_t2_1 2> add_t2_1
+./shrug-add a b c d > add_t2_2 2> add_t2_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-init > init_t2_1a 2> init_t2_1a
-2041 shrug-init > init_t2_2a 2> init_t2_2a
-2041 shrug-init askljfha fsdf > init_t2_3a 2> init_t2_3a
+2041 shrug-init > add_tmp
+2041 shrug-add a > add_t2_1a 2> add_t2_1a
+2041 shrug-add a b c d > add_t2_2a 2> add_t2_2a
 
 count=1
-while test $count -le 3
+while test $count -le 2
 do
     printf "."
-    passed=`diff "init_t2_$count" "init_t2_$count"a | wc -l`
+    passed=`diff "add_t2_$count" "add_t2_$count"a | wc -l`
     if test $passed -gt 0; then
-        printf "${FAIL}Test 2 (shrug existing already) --- failed${NC}\n"
+        printf "${FAIL}Test 2 (nonexistent files) --- failed${NC}\n"
         echo "difference below:"
-        diff "init_t2_$count" "init_t2_$count"a
+        diff "add_t2_$count" "add_t2_$count"a
         exit
     fi
     count=$(($count + 1))
 done
-printf "\n${PASS}Test 2 (shrug existing already) ---> passed!${NC}\n"
-rm init_t2*
+printf "\n${PASS}Test 2 (nonexistent files) ---> passed!${NC}\n"
+rm add_t2*
 
-rm init_* 2>/dev/null
+##
+## Test 03 - usage
+##
+
+# === my file === # ## duplicate test just in case :')
+rm -rf .shrug
+./shrug-init > add_tmp
+./shrug-add 2> add_t3_1
+./shrug-add 2> add_t3_2
+
+# === reference === #
+rm -rf .shrug
+2041 shrug-init > add_tmp
+2041 shrug-add 2> add_t3_1a
+2041 shrug-add 2> add_t3_2a
+
+count=1
+while test $count -le 2
+do
+    printf "."
+    passed=`diff "add_t3_$count" "add_t3_$count"a | wc -l`
+    if test $passed -gt 0; then
+        printf "${FAIL}Test 3 (usage) --- failed${NC}\n"
+        echo "difference below:"
+        diff "add_t3_$count" "add_t3_$count"a
+        exit
+    fi
+    count=$(($count + 1))
+done
+printf "\n${PASS}Test 3 (usage) ---> passed!${NC}\n"
+rm add_t3*
+
+rm add_*

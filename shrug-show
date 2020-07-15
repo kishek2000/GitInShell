@@ -10,6 +10,9 @@
 ##      -> the overall logic is quite simple. Handle errors accordingly, and otherwise
 ##         if we find the filename and the number, with the dash syntax we've
 ##         gone for as described in shrug-commit, then simply cat that file.
+##      -> one important quality - if we can't find a file with the version in our current
+##         branch, we should search the logs of other branches using find and 
+##         if it's there, cat that.
 ## -> handle errors otherwise.
 
 if ! test -d ".shrug"; then
@@ -34,25 +37,36 @@ branch=`cat ".shrug/branch.txt" | head -1`
 logfiles=".shrug/.$branch/.log"
 indexfiles=".shrug/.$branch/.index"
 filename=`echo $1 | sed 's/:/ /' | cut -d' ' -f2`
-ncommit=`echo $1 | sed 's/:/ /' | cut -d' ' -f1`
+commit_number=`echo $1 | sed 's/:/ /' | cut -d' ' -f1`
 
-if test "$ncommit" = "" && test -f "$indexfiles/$filename";
+if test "$commit_number" = "" && test -f "$indexfiles/$filename";
 then
     cat "$indexfiles/$filename"
-elif test -f "$logfiles/$ncommit-$filename";
+elif test -f "$logfiles/$commit_number-$filename";
 then
-    cat "$logfiles/$ncommit-$filename"
+    cat "$logfiles/$commit_number-$filename"
 else
-    if ! test "$ncommit" = ""; then
-        count=`ls "$logfiles/" | egrep "$ncommit-*" | wc -l | sed 's/ /,/' | cut -d, -f1`
-        if test $count -eq 0; then
-            >&2 echo "shrug-show: error: unknown commit '$ncommit'"
+    if ! test "$commit_number" = ""; then
+        ## So firstly, check that the commit number given isn't impossible.
+        total_commits=`cat ".shrug/branch.txt" | tail -1`
+        test $total_commits -ne 0 && total_commits=$(($total_commits - 1))
+        if test $total_commits -lt $commit_number; then
+            >&2 echo "shrug-show: error: unknown commit '$commit_number'"
             exit 1
         else
-            >&2 echo "shrug-show: error: '$filename' not found in commit $ncommit"
-            exit 1
+            ## Then, if the file isn't existent, we can check our whole .shrug subdirectory to see
+            ## if it's in the *log* of any other branch.
+            other_branch=`find .shrug/.*/.log -name "$commit_number-$filename" | wc -l`
+            if test $other_branch -gt 0; then
+                file=`find .shrug/.*/.log -name "$commit_number-$filename"`
+                cat "$file"
+            else
+                >&2 echo "shrug-show: error: '$filename' not found in commit $commit_number"
+                exit 1
+            fi
         fi
     else
+        ## So over here we just check if the file in itself exists in the index.
         if ! test -f "$indexfiles/$filename"; then
             >&2 echo "shrug-show: error: '$filename' not found in index"
             exit 1

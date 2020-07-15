@@ -1,6 +1,6 @@
 #!/bin/dash
 
-#### TESTS FOR SHRUG-ADD ####
+#### TESTS FOR SHRUG-COMMIT ####
 
 ## The process I've taken here, is to first do the error checks,
 ## and then do some weirder situations. This will be for all the test
@@ -19,101 +19,71 @@ FAIL='\033[0;31m'
 NC='\033[0m'
 
 echo
-echo "============ Testing shrug-add... ==========="
+echo "========== Testing shrug-commit... =========="
 echo
 
 ##
-## Test 01 - no shrug repo present
+## Test 01 - no repo
 ##
 
 # === my file === #
 rm -rf .shrug
-./shrug-add a b c d e f g 2> add_t1_1
-./shrug-add 2> add_t1_2
+./shrug-commit a b c d e f g > commit_t1_1 2> commit_t1_1  
+./shrug-commit > commit_t1_2 2> commit_t1_2
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-add a b c d e f g 2> add_t1_1a
-2041 shrug-add 2> add_t1_2a
+2041 shrug-commit a b c d e f g > commit_t1_1a 2> commit_t1_1a
+2041 shrug-commit > commit_t1_2a 2> commit_t1_2a
 
 count=1
 while test $count -le 2
 do
     printf "."
-    passed=`diff "add_t1_$count" "add_t1_$count"a | wc -l`
+    passed=`diff "commit_t1_$count" "commit_t1_$count"a | wc -l`
     if test $passed -gt 0; then
-        printf "${FAIL}Test 1 (no repo) --- failed${NC}\n"
+        printf "${FAIL} Test 1 (no repo) --- failed${NC}\n"
         echo "difference below:"
-        diff "add_t1_$count" "add_t1_$count"a
+        diff "commit_t1_$count" "commit_t1_$count"a
         exit
     fi
     count=$(($count + 1))
 done
-printf "\n${PASS}Test 1 (no repo) ---> passed!${NC}\n"
-rm add_t1*
+printf "\n${PASS} Test 1 (no repo) ---> passed!${NC}\n"
+rm commit_t1*
 
 ##
-## Test 02 - nonexistent files
+## Test 02 - command line arguments
 ##
 
 # === my file === #
 rm -rf .shrug
-./shrug-init > add_tmp
-./shrug-add a > add_t2_1 2> add_t2_1
-./shrug-add a b c d > add_t2_2 2> add_t2_2
+./shrug-init > commit_tmp
+./shrug-commit a b c d e f g > commit_t2_1 2> commit_t2_1  
+./shrug-commit -am message > commit_t2_2 2> commit_t2_2
+./shrug-commit abcd ._- -a -m message > commit_t2_3 2> commit_t2_3
 
 # === reference === #
 rm -rf .shrug
-2041 shrug-init > add_tmp
-2041 shrug-add a > add_t2_1a 2> add_t2_1a
-2041 shrug-add a b c d > add_t2_2a 2> add_t2_2a
+2041 shrug-init > commit_tmp
+2041 shrug-commit a b c d e f g > commit_t2_1a 2> commit_t2_1a
+2041 shrug-commit > commit_t2_2a 2> commit_t2_2a
+2041 shrug-commit abcd ._- -a -m message > commit_t2_3a 2> commit_t2_3a
 
 count=1
-while test $count -le 2
+while test $count -le 3
 do
     printf "."
-    passed=`diff "add_t2_$count" "add_t2_$count"a | wc -l`
+    passed=`diff "commit_t2_$count" "commit_t2_$count"a | wc -l`
     if test $passed -gt 0; then
-        printf "${FAIL}Test 2 (nonexistent files) --- failed${NC}\n"
+        printf "${FAIL} Test 2 (command line arguments) --- failed${NC}\n"
         echo "difference below:"
-        diff "add_t2_$count" "add_t2_$count"a
+        diff "commit_t2_$count" "commit_t2_$count"a
         exit
     fi
     count=$(($count + 1))
 done
-printf "\n${PASS}Test 2 (nonexistent files) ---> passed!${NC}\n"
-rm add_t2*
+printf "\n${PASS} Test 2 (command line arguments) ---> passed!${NC}\n"
+rm commit_t2*
 
-##
-## Test 03 - usage
-##
-
-# === my file === # ## duplicate test just in case :')
-rm -rf .shrug
-./shrug-init > add_tmp
-./shrug-add 2> add_t3_1
-./shrug-add 2> add_t3_2
-
-# === reference === #
-rm -rf .shrug
-2041 shrug-init > add_tmp
-2041 shrug-add 2> add_t3_1a
-2041 shrug-add 2> add_t3_2a
-
-count=1
-while test $count -le 2
-do
-    printf "."
-    passed=`diff "add_t3_$count" "add_t3_$count"a | wc -l`
-    if test $passed -gt 0; then
-        printf "${FAIL}Test 3 (usage) --- failed${NC}\n"
-        echo "difference below:"
-        diff "add_t3_$count" "add_t3_$count"a
-        exit
-    fi
-    count=$(($count + 1))
-done
-printf "\n${PASS}Test 3 (usage) ---> passed!${NC}\n"
-rm add_t3*
-
-rm add_*
+rm commit_*

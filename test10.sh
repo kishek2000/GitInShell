@@ -276,7 +276,7 @@ seq 2 10 > file.txt
 echo 1 > file.txt
 echo 3 >> file.txt
 ./shrug-commit -a -m "third-commit, no.2" > merge_tmp
-./shrug-merge b1 -m "merge branch" > merge_t6_2
+./shrug-merge b1 -m "merge branch" 2> merge_t6_2 > merge_t6_2
 cat file.txt 2> merge_t6_3 > merge_t6_3
 ./shrug-log 2> merge_t6_4 > merge_t6_4
 ./shrug-status | egrep -v "merge_t6" 2> merge_t6_5 > merge_t6_5
@@ -318,5 +318,4 @@ do
 done
 printf "\n${PASS}Test 6 (harder merge) ---> passed!${NC}\n"
 rm merge_t6*
-
 rm merge_*

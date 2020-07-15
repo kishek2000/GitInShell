@@ -90,13 +90,9 @@ else
 
                 num_changes_branch=`echo "$changes_branch" | wc -l`
                 num_changes_current=`echo "$changes_current" | wc -l`
-
                 ## in this method of checking for a conflict, we need to be wary of one thing - if the two diffs recommend
                 ## changing something on the same line, except the change they recommend is also identical, then it's not
                 ## a conflict!
-
-                ## Some more conflicts which i might not cover completely include one adding lines in a place where the other
-                ## seeks to delete lines?
 
                 test $num_changes_branch -le $num_changes_current && outer_loop="$changes_branch" && inner_loop="$changes_current" &&
                 outer_file=".shrug/.$1/.log/$latest_branch_version-$filename" && 
@@ -115,7 +111,55 @@ else
                         inner_src=`echo $inner_changes | sed 's/[acd]/ /g' | cut -d ' ' -f1`
                         inner_dest=`echo $inner_changes | sed 's/[acd]/ /g' | cut -d ' ' -f2`
 
-                        potential_conflict=`echo "$outer_src" | egrep "$inner_src" | wc -l`
+                        ## to check for a potential conflict, we then need to see if the two src
+                        ## we have found, have ANY common numbers at all.
+                        
+                        single_change_outer=`echo "$outer_src" | egrep ',' | wc -l`
+                        single_change_inner=`echo "$inner_src" | egrep ',' | wc -l`
+
+                        ## in order to identify the conflicts properly, we have to go through these main cases:
+                        ## 1) one change is of the form 1,2 and the other is a single number, 6
+                        ## 2) reverse of the above
+                        ## 3) both changes are of the form 1,2
+                        ## 4) both changes are singular
+
+                        ## to identify a conflict in 1 or 2, we need to see if the singular number falls in the
+                        ## range, inclusive, of the range from the other change.
+                        ## to identify a conflict in 3, we need to see if the two ranges intersect.
+                        ## finally for singular, we can just see if it's equal or not.
+
+                        potential_conflict=0
+                        if test $single_change_outer -gt 0 && test $single_change_inner -eq 0; then
+                            ## Case 1)
+                            range_lo=`echo $outer_src | tr ',' '\n' | head -1`
+                            range_hi=`echo $outer_src | tr ',' '\n' | tail -1`
+                            if test $inner_src -ge $range_lo && test $inner_src -le $range_hi; then
+                                potential_conflict=1
+                            fi
+
+                        elif test $single_change_outer -eq 0 && test $single_change_inner -gt 0; then
+                            ## Case 2)
+                            range_lo=`echo $inner_src | tr ',' '\n' | head -1`
+                            range_hi=`echo $inner_src | tr ',' '\n' | tail -1`
+                            if test $outer_src -ge $range_lo && test $outer_src -le $range_hi; then
+                                potential_conflict=1
+                            fi
+
+                        elif test $single_change_outer -gt 0 && test $single_change_inner -gt 0; then
+                            ## Case 3)
+                            range_outer_lo=`echo $outer_src | tr ',' '\n' | head -1`
+                            range_outer_hi=`echo $outer_src | tr ',' '\n' | tail -1`
+                            range_inner_lo=`echo $inner_src | tr ',' '\n' | head -1`
+                            range_inner_hi=`echo $inner_src | tr ',' '\n' | tail -1`
+                            ## the below is the classic way of finding if two ranges intersect, where
+                            ## range 1 is x1 <= x2 and y1 <= y2: the test is x1 <= y2 && y1 <= x2
+                            if test $range_outer_lo -le $range_inner_hi && test $range_inner_lo -le $range_outer_hi; then
+                                potential_conflict=1
+                            fi
+                        else
+                            ## Case 4)
+                            test $inner_src -eq $outer_src && potential_conflict=1
+                        fi
                         if test $potential_conflict -gt 0; then
                             outer_proposed=`sed -n "$outer_dest"p "$outer_file"`
                             inner_proposed=`sed -n "$inner_dest"p "$inner_file"`
@@ -132,12 +176,16 @@ else
             fi
         fi
     done
-    test "$error" = "true" && 
-    >&2 echo "shrug-merge: error: These files can not be merged:" && 
-    for nomerge in $errorfiles
-    do
-        echo "$nomerge"
-    done && exit 1
+    
+    
+    if test "$error" = "true"; then
+        >&2 echo "shrug-merge: error: These files can not be merged:"
+        for nomerge in $errorfiles
+        do
+            >&2 echo "$nomerge"
+        done
+        exit 1
+    fi
 
     if test "$error" = "false" && test "$copyall" = "true"; then
         ## to check if we fast forward, or are already up to date, we diff the currdir file 
@@ -244,10 +292,9 @@ else
 
             latest_common_commit=".shrug/.$branch/.log/$latest_common"
 
-            ##############
-            ## Strategy ##
-            ##############
-            
+            ## The strategy here, is to go with deletions, then replacements, then additions.
+            ## My working in understanding this is in merge_cases_working.
+
             ## Firstly before we get started in merging stuff, let's check if we are already up to date.
             curr_and_branch=`diff "$filename" ".shrug/.$1/.log/$latest_branch_version-$filename" | wc -l`            
             test $curr_and_branch -eq 0 && echo "Already up to date" && exit 0
@@ -295,7 +342,6 @@ else
             echo "Auto-merging $filename"
             
             ## from these diffs, we want to go through the deletions and do them first - going from bottom to top in the file.
-
             deletions=`printf "$branch_deletions\n$curr_deletions\n" | tr ' ' '\n' | sort -r | egrep -v "^$"`
             cat $latest_common_commit > $filename
 
@@ -324,7 +370,6 @@ else
             done
 
             ## from these diffs, we finally look through the additions and do them last - go from bottom of file like deletions.
-            
             additions=`printf "$branch_additions\n$curr_additions\n" | tr ' ' '\n' | sort -r | egrep -v "^$"`
             for addition in $additions
             do
@@ -374,4 +419,3 @@ else
     sh shrug-commit -a -m "$3" && 
     cat ".shrug/.$1/.log/log.txt" >> ".shrug/.$branch/.log/log.txt"
 fi
-

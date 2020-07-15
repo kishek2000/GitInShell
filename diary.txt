@@ -83,3 +83,6 @@ DATE		START		END		    ACTIVITY		                COMMENTS
                                                                     Also a quick fyi, the dots in my tests when you run them are the amount of 
                                                                     cases or comparisons that are done for each test. Usually there's a minimum of
                                                                     2 cases/comparisons. Comparisons meaning my output vs reference implementation.
+15/07/2020  12:30pm     1:17pm      solving my test!                I solved my hard merge case! I understood that it was just about how I was 
+                                                                    identifying conflicts, and now I think it's a lot more robust. Time to push it 
+                                                                    all up again.

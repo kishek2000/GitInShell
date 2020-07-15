@@ -9,7 +9,7 @@ echo "============================================="
 echo "=========== Running automarking... =========="
 echo "============================================="
 echo
-# 2041 autotest shrug shrug-*
+2041 autotest shrug shrug-*
 echo
 echo "============================================="
 echo "========== Running test scripts... =========="

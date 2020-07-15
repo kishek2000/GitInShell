@@ -58,7 +58,7 @@ else
                     >&2 echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
                     for nomerge in $errorfiles
                     do
-                        echo "$nomerge"
+                        >&2 echo "$nomerge"
                     done && exit 1
                     test "$error" = "false" && cp "$f" ".shrug/.$1/.files"
                 fi
@@ -69,7 +69,6 @@ else
 
             # what we need to do though, is check if there is a difference between this version, and the version in the branch
             # we are going to - if any at all.
-            # test "$branch" = "brancha" && echo "hi, checking file $f"
             error="false"
             errorfiles=""
             if test -f ".shrug/.$branch/.files/$f" && ! test -f ".shrug/.$branch/$f" && ! test -f ".shrug/.$branch/.index/$f"; then
@@ -78,11 +77,11 @@ else
                     test $difference -gt 0 && error="true"
                     errorfiles="$errorfiles$f "
                 fi
-                test "$error" = "true" && # echo "the error files are as follows: '$errorfiles'" &&
+                test "$error" = "true" &&
                 >&2 echo "shrug-checkout: error: Your changes to the following files would be overwritten by checkout:" &&
                 for nomerge in $errorfiles
                 do
-                    echo "$nomerge"
+                    >&2 echo "$nomerge"
                 done && exit 1
                 test "$error" = "false" && cp "$f" ".shrug/.$1/.files"
             fi

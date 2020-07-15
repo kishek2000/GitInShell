@@ -1,4 +1,4 @@
-DATE		START		END		    ACTIVITY		                COMMENTS
+DATE        START		END		    ACTIVITY		                COMMENTS
 
 27/06/2020	5:55pm		6:10pm		coding			                Just getting shrug-init working, excited to get started on this!
 ""/""/""""  9:00pm      9:45pm      coding		    	            Continued work on subset 0. Init, add, commit and log working. 

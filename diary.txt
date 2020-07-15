@@ -1,13 +1,13 @@
-DATE        START       END         ACTIVITY		                     COMMENTS
-27/06/2020  5:55pm		    6:10pm		    coding			                      Just getting shrug-init working, excited to get started on this!
-""/""/""""  9:00pm      9:45pm      coding		    	                  Continued work on subset 0. Init, add, commit and log working. 
+DATE        START       END         ACTIVITY                       COMMENTS
+27/06/2020  5:55pm      6:10pm      coding                         Just getting shrug-init working, excited to get started on this!
+""/""/""""  9:00pm      9:45pm      coding                         Continued work on subset 0. Init, add, commit and log working. 
                                                                    Show is todo.
 
-28/06/2020  12:00pm  	  12:38pm		   coding	    		                  Finished off subset 0!!
-""/""/""""	 1:30pm		    3:00pm		    debugging/testing	             Finally succeeded with the basic autotests for subset 0 and understood 
+28/06/2020  12:00pm     12:38pm     coding                         Finished off subset 0!!
+""/""/""""  1:30pm      3:00pm      debugging/testing              Finally succeeded with the basic autotests for subset 0 and understood 
                                                                    some parallels with git through use of reference implementation.
-
-29/06/2020	 11:30am		   12:10pm		   coding and testing	            Succeeded in simple passes for shrug-commit with the -a option in subset 
+                                                                   
+29/06/2020  11:30am     12:10pm		   coding and testing             Succeeded in simple passes for shrug-commit with the -a option in subset 
                                                                    1, and succeeded in some simple manual tests of shrug-status. next up 
                                                                    - shrug-rm!
 
